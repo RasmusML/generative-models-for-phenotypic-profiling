@@ -40,6 +40,26 @@ def get_relative_image_paths(metadata: pd.DataFrame) -> list[str]:
         
     return result
 
+def get_relative_image_folders(metadata: pd.DataFrame) -> list[str]:
+    """ returns 'singh_cp_pipeline_singlecell_images'/subfolder/"""
+    result = []
+
+    multi_cell_image_name = metadata["Multi_Cell_Image_Name"]
+    single_cell_image_id = metadata["Single_Cell_Image_Id"]
+
+    if not isinstance(multi_cell_image_name, pd.Series):
+        raise TypeError("error")
+
+    if not isinstance(single_cell_image_id, pd.Series):
+        raise TypeError("error")
+    
+    for multi_cell_name, image_id in zip(multi_cell_image_name, single_cell_image_id):
+        folder = "singh_cp_pipeline_singlecell_images/" + multi_cell_name
+        result.append(folder)
+        
+    return result
+
+
 def load_images(paths: list[str]) -> list[np.ndarray]:
     result = []
 

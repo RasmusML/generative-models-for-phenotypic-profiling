@@ -14,7 +14,7 @@ def view_channel_dim_first(data: torch.Tensor) -> torch.Tensor:
         in:  [samples, channels, height, width]
         out: [channels, samples, height, width]
     """
-    return data.permute(1,0,2,3)
+    return torch.permute(data, dims=(1,0,2,3))
 
 def normalize_channels_inplace(data: torch.Tensor):
     """ input shape: [sample, channel, height, width] """
