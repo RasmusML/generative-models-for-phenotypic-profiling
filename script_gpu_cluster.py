@@ -124,19 +124,17 @@ for epoch in range(num_epochs):
     print("validation | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["log_px"]), np.mean(validation_data["kl"])))    
     
 
+print("finished training!")
 
 vae.eval() # because of batch normalization
 
 n = 10
 for i in range(n):
     x = train_set[i]
-    print(x.shape)
     
     x = x[None,:,:,:]
-    print(x.shape)
     
     outputs = vae(x.cuda())
-    print("out!!!")
     px = outputs["px"]
     
     x_reconstruction = px.sample()
@@ -145,3 +143,5 @@ for i in range(n):
     save_image(x_reconstruction.cpu(), "images/x{}_reconstruction.npy".format(i))
     save_image(x.cpu(), "images/x{}.npy".format(i))
 
+print("saved images")
+print("script done!")
