@@ -1,3 +1,4 @@
+from typing import List, Set, Dict, Tuple, Optional, Any
 import pandas as pd
 import numpy as np
 import os
@@ -13,7 +14,7 @@ def read_metadata(path: str) -> pd.DataFrame:
 def save_metadata(metadata: pd.DataFrame, path: str):
     metadata.to_csv(path, index=False)
 
-def filter_metadata_by_multi_cell_image_names(metadata: pd.DataFrame, multi_cell_image_names: list[str]) -> pd.DataFrame:
+def filter_metadata_by_multi_cell_image_names(metadata: pd.DataFrame, multi_cell_image_names: List[str]) -> pd.DataFrame:
     """ Also corresponds to the subfolder name. """
     result = metadata[np.isin(metadata["Multi_Cell_Image_Name"], multi_cell_image_names)]
 
@@ -22,7 +23,7 @@ def filter_metadata_by_multi_cell_image_names(metadata: pd.DataFrame, multi_cell
 
     return result
 
-def get_relative_image_paths(metadata: pd.DataFrame) -> list[str]:
+def get_relative_image_paths(metadata: pd.DataFrame) -> List[str]:
     """ returns 'singh_cp_pipeline_singlecell_images'/subfolder/image_name """
     result = []
 
@@ -41,7 +42,7 @@ def get_relative_image_paths(metadata: pd.DataFrame) -> list[str]:
         
     return result
 
-def get_relative_image_folders(metadata: pd.DataFrame) -> list[str]:
+def get_relative_image_folders(metadata: pd.DataFrame) -> List[str]:
     """ returns 'singh_cp_pipeline_singlecell_images'/subfolder/"""
     result = []
 
@@ -61,7 +62,7 @@ def get_relative_image_folders(metadata: pd.DataFrame) -> list[str]:
     return result
 
 
-def load_images(paths: list[str]) -> list[np.ndarray]:
+def load_images(paths: List[str]) -> List[np.ndarray]:
     result = []
 
     for path in paths:

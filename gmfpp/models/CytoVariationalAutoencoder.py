@@ -13,7 +13,7 @@ class CytoVariationalAutoencoder(nn.Module):
     * a Gaussian posterior `q_\phi(z|x) = N(z | \mu(x), \sigma(x))`
     """
     
-    def __init__(self, input_shape: torch.Size, latent_features: int):
+    def __init__(self, input_shape: torch.Size | np.array, latent_features: int):
         super(CytoVariationalAutoencoder, self).__init__()
         
         self.input_shape = input_shape

@@ -1,3 +1,4 @@
+from typing import List, Set, Dict, Tuple, Optional, Any
 import torch
 import numpy as np
 
@@ -22,7 +23,7 @@ def normalize_channels_inplace(data: torch.Tensor):
     for i in range(view.shape[0]):
         view[i] /= torch.max(view[i])
 
-def prepare_raw_images(images: list[np.ndarray]) -> torch.Tensor:
+def prepare_raw_images(images: List[np.ndarray]) -> torch.Tensor:
     """
         in:  [sample, height, width, channel]
         out: [sample, channel, height, width]
