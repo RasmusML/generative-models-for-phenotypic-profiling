@@ -2,7 +2,7 @@ import numpy as np
 from torch import nn, Tensor
 import torch
 from torch.distributions import Distribution, Exponential, Cauchy, HalfCauchy, Normal
-from gmfpp.models.PrintSize import PrintSize
+from gmfpp.models.PrintSize import *
 from typing import List, Set, Dict, Tuple, Optional, Any
 from gmfpp.models.ReparameterizedDiagonalGaussian import ReparameterizedDiagonalGaussian
 
@@ -13,7 +13,7 @@ class CytoVariationalAutoencoder(nn.Module):
     * a Gaussian posterior `q_\phi(z|x) = N(z | \mu(x), \sigma(x))`
     """
     
-    def __init__(self, input_shape: torch.Size | np.array, latent_features: int):
+    def __init__(self, input_shape: torch.Size | np.ndarray, latent_features: int):
         super(CytoVariationalAutoencoder, self).__init__()
         
         self.input_shape = input_shape
