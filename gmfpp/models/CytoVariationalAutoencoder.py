@@ -7,13 +7,8 @@ from typing import List, Set, Dict, Tuple, Optional, Any
 from gmfpp.models.ReparameterizedDiagonalGaussian import ReparameterizedDiagonalGaussian
 
 class CytoVariationalAutoencoder(nn.Module):
-    """A Variational Autoencoder with
-    * a Bernoulli observation model `p_\theta(x | z) = B(x | g_\theta(z))`
-    * a Gaussian prior `p(z) = N(z | 0, I)`
-    * a Gaussian posterior `q_\phi(z|x) = N(z | \mu(x), \sigma(x))`
-    """
-    
-    def __init__(self, input_shape: torch.Size | np.ndarray, latent_features: int):
+   
+    def __init__(self, input_shape, latent_features: int):
         super(CytoVariationalAutoencoder, self).__init__()
         
         self.input_shape = input_shape

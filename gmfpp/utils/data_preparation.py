@@ -62,13 +62,20 @@ def get_relative_image_folders(metadata: pd.DataFrame) -> List[str]:
     return result
 
 
-def load_images(paths: List[str]) -> List[np.ndarray]:
+def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000) -> List[np.ndarray]:
     result = []
-
-    for path in paths:
+    
+    for i, path in enumerate(paths):
         image = np.load(path)
         result.append(image)
+    
+        if verbose:
+            if i % log_every == 0:
+                print("loaded {}/{} images ({:.2f}%).".format(i, len(paths), i  / len(paths) * 100))
 
+    if verbose:
+        print("loaded {}/{} images ({:.2f}%).".format(len(paths), len(paths), 100))
+        
     return result
 
 def drop_redundant_metadata_columns(metadata: pd.DataFrame) -> pd.DataFrame:
@@ -85,3 +92,6 @@ def drop_redundant_metadata_columns(metadata: pd.DataFrame) -> pd.DataFrame:
 def create_directories(dir_path: str):
     if not os.path.exists(dir_path):
        os.makedirs(dir_path)
+
+def get_server_directory_path() -> str:
+    return "/zhome/70/5/14854/nobackup/deeplearningf22/bbbc021/singlecell/"
