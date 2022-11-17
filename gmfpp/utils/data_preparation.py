@@ -14,6 +14,9 @@ def read_metadata(path: str) -> pd.DataFrame:
 def save_metadata(metadata: pd.DataFrame, path: str):
     metadata.to_csv(path, index=False)
 
+def save_image(image: np.ndarray, path: str):
+    np.save(path, image)
+
 def filter_metadata_by_multi_cell_image_names(metadata: pd.DataFrame, multi_cell_image_names: List[str]) -> pd.DataFrame:
     """ Also corresponds to the subfolder name. """
     result = metadata[np.isin(metadata["Multi_Cell_Image_Name"], multi_cell_image_names)]
