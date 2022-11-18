@@ -26,21 +26,21 @@ def filter_metadata_by_multi_cell_image_names(metadata: pd.DataFrame, multi_cell
 
     return result
 
-def get_relative_image_paths(metadata: pd.DataFrame) -> List[str]:
+def get_relative_image_path(metadata_row: pd.Series) -> str:
     """ returns 'singh_cp_pipeline_singlecell_images'/subfolder/image_name """
+    multi_cell_image_name = metadata_row["Multi_Cell_Image_Name"]
+    single_cell_image_id = metadata_row["Single_Cell_Image_Id"]
+    result = "singh_cp_pipeline_singlecell_images/" + multi_cell_image_name + "/" + multi_cell_image_name + "_" + str(single_cell_image_id) + ".npy"
+    return result
+
+def get_relative_image_paths(metadata: pd.DataFrame) -> List[str]:
+    """ 
+    returns [..., 'singh_cp_pipeline_singlecell_images'/subfolder/image_name] 
+    """
     result = []
 
-    multi_cell_image_name = metadata["Multi_Cell_Image_Name"]
-    single_cell_image_id = metadata["Single_Cell_Image_Id"]
-
-    if not isinstance(multi_cell_image_name, pd.Series):
-        raise TypeError("error")
-
-    if not isinstance(single_cell_image_id, pd.Series):
-        raise TypeError("error")
-    
-    for multi_cell_name, image_id in zip(multi_cell_image_name, single_cell_image_id):
-        path = "singh_cp_pipeline_singlecell_images/" + multi_cell_name + "/" + multi_cell_name + "_" + str(image_id) + ".npy"
+    for _, row in metadata.iterrows():
+        path = get_relative_image_path(row)
         result.append(path)
         
     return result
@@ -69,7 +69,7 @@ def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000
     result = []
     
     for i, path in enumerate(paths):
-        image = np.load(path)
+        image = load_image(path)
         result.append(image)
     
         if verbose:
@@ -80,6 +80,9 @@ def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000
         print("loaded {}/{} images ({:.2f}%).".format(len(paths), len(paths), 100))
         
     return result
+    
+def load_image(path: str) -> np.ndarray:
+    return np.load(path)
 
 def drop_redundant_metadata_columns(metadata: pd.DataFrame) -> pd.DataFrame:
     " Drops unused and redundant columns "
@@ -92,7 +95,8 @@ def drop_redundant_metadata_columns(metadata: pd.DataFrame) -> pd.DataFrame:
 
     return result
  
-def create_directories(dir_path: str):
+def create_directory(dir_path: str):
+    """ subdirectories are also created, e.g. folderA/folderB """
     if not os.path.exists(dir_path):
        os.makedirs(dir_path)
 

@@ -4,7 +4,12 @@ import matplotlib.pyplot as plt
 
 from gmfpp.utils.data_transformers import view_as_image_plot_format, clip_image_to_zero_one
 
-def plot_image(image: torch.Tensor):
+def plot_image(image: torch.Tensor, clip: bool = True):
+    image = image.clone()
+
+    if clip:
+        image = clip_image_to_zero_one(image)
+
     plot_image = view_as_image_plot_format(image)
     plt.imshow(plot_image)
     plt.show()

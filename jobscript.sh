@@ -7,6 +7,5 @@
 #BSUB -R "rusage[mem=32GB]"
 #BSUB -o logs/%J.out
 #BSUB -e logs/%J.err
-<loading of modules, dependencies etc.>
 echo "Running script..."
-python3 train.py
+python3 script_gpu_cluster.py

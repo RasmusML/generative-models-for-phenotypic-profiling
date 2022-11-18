@@ -126,7 +126,7 @@ for epoch in range(num_epochs):
 
 print("finished training!")
 
-make_directory("images")
+create_directory("images")
 
 vae.eval() # because of batch normalization
 
