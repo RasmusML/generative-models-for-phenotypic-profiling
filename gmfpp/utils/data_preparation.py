@@ -102,3 +102,26 @@ def create_directory(dir_path: str):
 
 def get_server_directory_path() -> str:
     return "/zhome/70/5/14854/nobackup/deeplearningf22/bbbc021/singlecell/"
+
+
+def shuffle_metadata(df: pd.DataFrame, seed: int = 0) -> pd.DataFrame:
+    result = df.sample(frac=1, random_state = seed)
+    result = result.reset_index(drop=True)
+    return result
+    
+def split_metadata(df: pd.DataFrame, split_fraction: float) -> pd.DataFrame:
+    N_rows = df.shape[0]
+    split_index = N_rows * split_fraction
+    mask = np.arange(N_rows) <= split_index
+    return df[mask], df[~mask]
+    
+def get_label_mappings(labels: np.ndarray) -> Dict[str, int]:
+    label_to_id = {}
+    for label in labels:
+        label_to_id[label] = len(label_to_id)
+    return label_to_id
+    
+def get_MOA_mappings(metadata: pd.DataFrame) -> Dict[str, int]:
+    labels = metadata["moa"].unique()
+    labels.sort()
+    return get_label_mappings(labels)
