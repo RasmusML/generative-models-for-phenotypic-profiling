@@ -23,62 +23,75 @@ from gmfpp.models.VariationalAutoencoder import *
 from gmfpp.models.ConvVariationalAutoencoder import *
 from gmfpp.models.VariationalInference import *
 
+######### Utilities #########
+
+def get_clock_time():
+    from time import gmtime, strftime
+    result = strftime("%H:%M:%S", gmtime())
+    return result
+    
+def cprint(s: str):
+    clock = get_clock_time()
+    print("{} | {}".format(clock, s))
+
+
 torch.manual_seed(0)
 torch.cuda.manual_seed(0)
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+cprint(f"Using device: {device}")
+
+
+######### loading data #########
+
 path = get_server_directory_path()
+#path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
-print("loaded metadata")
+#metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
+cprint("loaded metadata")
 
+cprint("loading images")
 relative_paths = get_relative_image_paths(metadata)
 image_paths = [path + relative for relative in relative_paths]
-images = load_images(image_paths, verbose=True)
-print("loaded images")
+images = load_images(image_paths, verbose=False)
+cprint("loaded images")
 
 train_set = prepare_raw_images(images)
 normalize_channels_inplace(train_set)
-print("normalized images")
-
-channel_first = view_channel_dim_first(train_set)
-for i in range(channel_first.shape[0]):
-    channel = channel_first[i]
-    print("channel {} interval: [{:.2f}; {:.2f}]".format(i, torch.min(channel), torch.max(channel)))
+cprint("normalized images")
 
 
-# VAE
-image_shape = np.array([3, 68, 68], dtype=np.int32)
+######### VAE Configs #########
+image_shape = np.array([3, 68, 68])
 latent_features = 256
+
 vae = CytoVariationalAutoencoder(image_shape, latent_features)
 #vae = VariationalAutoencoder(image_shape, latent_features)
+vae = vae.to(device)
 
-beta = 1
+beta = 1.
 vi = VariationalInference(beta=beta)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(f">> Using device: {device}")
 
-num_epochs = 3000
+######### Training Configs #########
+num_epochs = 30
 batch_size = 32
 
+learning_rate = 1e-3
+weight_decay = 10e-4
+
+optimizer = torch.optim.Adam(vae.parameters(), lr=learning_rate, weight_decay=weight_decay)
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0, drop_last=True)
 
-# move the model to the device
-vae = vae.to(device)
-#vi = vi.to(device)
 
-# The Adam optimizer works really well with VAEs.
-optimizer = torch.optim.Adam(vae.parameters(), lr=1e-3, weight_decay=10e-4)
+######### Training #########
 
-# define dictionary to store the training curves
 training_data = defaultdict(list)
 validation_data = defaultdict(list)
 
-# training..
-
 for epoch in range(num_epochs):
-    print(f"epoch: {epoch}/{num_epochs}")
+    cprint(f"epoch: {epoch}/{num_epochs}")
     
     training_epoch_data = defaultdict(list)
     vae.train()
@@ -86,27 +99,22 @@ for epoch in range(num_epochs):
     for x in train_loader:
         x = x.to(device)
         
-        # perform a forward pass through the model and compute the ELBO
         loss, diagnostics, outputs = vi(vae, x)
         
         optimizer.zero_grad()
-        
         loss.backward()
         torch.nn.utils.clip_grad_norm_(vae.parameters(), 1000)
-        
         optimizer.step()
         
-        # gather data for the current batch
         for k, v in diagnostics.items():
             training_epoch_data[k] += [v.mean().item()]
     
-    print("training | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["log_px"]), np.mean(training_epoch_data["kl"])))
+    cprint("training | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["log_px"]), np.mean(training_epoch_data["kl"])))
     
-    # gather data for the full epoch
     for k, v in training_epoch_data.items():
         training_data[k] += [np.mean(training_epoch_data[k])]
     
-    # Evaluate on a single batch, do not propagate gradients
+    
     with torch.no_grad():
         vae.eval()
         
@@ -114,36 +122,41 @@ for epoch in range(num_epochs):
         '''x, y = next(iter(test_loader))'''
         x = x.to(device)
         
-        # perform a forward pass through the model and compute the ELBO
         loss, diagnostics, outputs = vi(vae, x)
         
-        # gather data for the validation step
         for k, v in diagnostics.items():
             validation_data[k] += [v.mean().item()]
         
-    print("validation | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["log_px"]), np.mean(validation_data["kl"])))    
+    cprint("validation | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["log_px"]), np.mean(validation_data["kl"])))    
     
 
-print("finished training!")
+cprint("finished training")
 
-create_directory("images")
+
+######### Save VAE parameters #########
+create_directory("dump/parameters")
+torch.save(vae.state_dict(), "dump/parameters/vae_parameters.pt")
+
+
+######### extract a few images already #########
+create_directory("dump/images")
 
 vae.eval() # because of batch normalization
 
 n = 10
 for i in range(n):
-    x = train_set[i]
-    
+    x = train_set[i]    
     x = x[None,:,:,:]
-    
-    outputs = vae(x.cuda())
+    x = x.to(device)
+   
+    outputs = vae(x)
     px = outputs["px"]
     
     x_reconstruction = px.sample()
     x_reconstruction = x_reconstruction[0]
     
-    save_image(x_reconstruction.cpu(), "images/x{}_reconstruction.npy".format(i))
-    save_image(x.cpu(), "images/x{}.npy".format(i))
+    save_image(x_reconstruction.cpu(), "dump/images/x{}_reconstruction.npy".format(i))
+    save_image(x.cpu(), "dump/images/x{}.npy".format(i))
 
-print("saved images")
-print("script done!")
+cprint("saved images")
+cprint("script done.")
