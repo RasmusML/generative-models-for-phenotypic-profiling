@@ -11,7 +11,7 @@ print(multi_cell_images_names)
 
 metadata_small = filter_metadata_by_multi_cell_image_names(metadata, multi_cell_images_names)
 
-create_directory("./data/small/")
-save_metadata(metadata_small, "./data/small/metadata.csv")
+create_directory("C:/git/generative-models-for-phenotypic-profiling/data/small/")
+save_metadata(metadata_small, "C:/git/generative-models-for-phenotypic-profiling/data/small/metadata.csv")
 
 print("completed!")
