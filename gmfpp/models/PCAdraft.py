@@ -34,11 +34,28 @@ for i in images_arr_list:
     
 X = np.array(images_flattened_list)
 
+def PCA_julia(mat, n_components):
+    
+    sc = StandardScaler()
+    X_transformed = sc.fit_transform(X)
+    pca = PCA(n_components)
+    result = pca.fit(X_transformed)
+    
+    return result
+
+PCA_julia(mat=X, n_components=1000)
+
 sc = StandardScaler()
 X_n = sc.fit_transform(X)
 
 pca = PCA(n_components=1000)
 pca.fit(X_n)
+
+#take one timage and apply the pca
+img = X_n[0]
+
+#https://pytorch.org/docs/stable/generated/torch.nn.CosineSimilarity.html
+
 print(pca.explained_variance_ratio_)
 
 pca.explained_variance_ratio_.sum()
@@ -79,28 +96,4 @@ def testPCAFit(matrix,n,three_D=True,scatter=True):
 
 res = testPCAFit(X,1000)
 res
-
-
-
-
-
-
-
-
-#res = images_arr_list[0].flatten()
-
-
-ca = PCA(n_components=2)
-
->>> import numpy as np
->>> 
->>> X = np.array([[-1, -1], [-2, -1], [-3, -2], [1, 1], [2, 1], [3, 2]])
->>> pca = PCA(n_components=2)
->>> pca.fit(X)
-PCA(n_components=2)
->>> print(pca.explained_variance_ratio_)
-[0.9924... 0.0075...]
->>> print(pca.singular_values_)
-[6.30061... 0.54980...]
-
 
