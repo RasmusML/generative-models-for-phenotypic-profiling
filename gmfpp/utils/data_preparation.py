@@ -2,6 +2,7 @@ from typing import List, Set, Dict, Tuple, Optional, Any
 import pandas as pd
 import numpy as np
 import os
+from gmfpp.utils.utils import *
 
 def read_metadata(path: str) -> pd.DataFrame:
     result = pd.read_csv(path)
@@ -74,10 +75,10 @@ def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000
     
         if verbose:
             if i % log_every == 0:
-                print("loaded {}/{} images ({:.2f}%).".format(i, len(paths), i  / len(paths) * 100))
+                cprint("loaded {}/{} images ({:.2f}%).".format(i, len(paths), i  / len(paths) * 100))
 
     if verbose:
-        print("loaded {}/{} images ({:.2f}%).".format(len(paths), len(paths), 100))
+        cprint("loaded {}/{} images ({:.2f}%).".format(len(paths), len(paths), 100))
         
     return result
     
