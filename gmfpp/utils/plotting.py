@@ -12,10 +12,12 @@ def plot_image(image: torch.Tensor, clip: bool = True, file=None, title=None):
 
     plot_image = view_as_image_plot_format(image)
     plt.imshow(plot_image)
-    #plt.show()
+
     if file==None:
         plt.show()
-    else: plt.savefig(file)
+    else: 
+        plt.savefig(file)
+
     plt.close()
 
 
@@ -50,7 +52,9 @@ def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool 
 
     if file==None:
         plt.show()
-    else: plt.savefig(file)
+    else: 
+        plt.savefig(file)
+
     plt.close()
 
 
@@ -75,7 +79,10 @@ def plot_VAE_performance(elbo, log_px, kl, file=None, title=None):
     ax3.plot(kl)
     ax3.set_ylabel("KL-divergence")
     ax3.set_xlabel("epoch")
-    if file==None:
+    
+    if file == None:
         plt.show()
-    else: plt.savefig(file)
+    else: 
+        plt.savefig(file)
+    
     plt.close()

@@ -65,10 +65,11 @@ def get_relative_image_folders(metadata: pd.DataFrame) -> List[str]:
         result.append(folder)
         
     return result
+
 def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000):
     image_0 = load_image(paths[0])
     
-    dims = [len(paths)]+ list(image_0.shape)
+    dims = [len(paths)] + list(image_0.shape)
     result = torch.zeros(dims)
     
     for i, path in enumerate(paths):

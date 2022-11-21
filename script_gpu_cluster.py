@@ -36,8 +36,8 @@ cprint(f"Using device: {device}")
 
 ######### loading data #########
 
-#path = get_server_directory_path()
-path = "data/all/"
+path = get_server_directory_path()
+#path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
 metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
@@ -64,10 +64,11 @@ test_set = SingleCellDataset(metadata_test, images, mapping)
 
 ######### VAE Configs #########
 cprint("VAE Configs")
+
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
-                                                                    num_epochs = 2,
+                                                                    num_epochs = 1000,
                                                                     batch_size = min(32, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
@@ -86,6 +87,11 @@ cprint("VAE Training")
 num_epochs = VAE_settings['num_epochs']
 batch_size = VAE_settings['batch_size']
 
+impatience_level = 0
+max_patience = 10
+
+best_elbo = np.finfo(np.float64).min
+
 for epoch in range(num_epochs):
     cprint(f"epoch: {epoch}/{num_epochs}")
     
@@ -97,12 +103,12 @@ for epoch in range(num_epochs):
         
         # perform a forward pass through the model and compute the ELBO
         loss, diagnostics, outputs = vi(vae, x)
-
+        
         optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(vae.parameters(), 10_000)
         optimizer.step()
-
+        
         for k, v in diagnostics.items():
             training_epoch_data[k] += [v.mean().item()]
     
@@ -110,7 +116,7 @@ for epoch in range(num_epochs):
     
     for k, v in training_epoch_data.items():
         training_data[k] += [np.mean(training_epoch_data[k])]
-
+    
     with torch.no_grad():
         vae.eval()
         
@@ -118,15 +124,28 @@ for epoch in range(num_epochs):
         
         for x, _ in validation_loader:
             x = x.to(device)
-          
+            
             loss, diagnostics, outputs = vi(vae, x)
             
             for k, v in diagnostics.items():
                 validation_epoch_data[k] += [v.mean().item()]
-
+        
         for k, v in diagnostics.items():
             validation_data[k] += [np.mean(validation_epoch_data[k])]
         
+        impatience_level += 1
+        
+        current_elbo = validation_data["elbo"][-1]
+        print(impatience_level, current_elbo, best_elbo)
+        if current_elbo > best_elbo:
+            impatience_level = 0 
+        
+        if impatience_level > max_patience:
+            cprint("no more patience left at epoch {}".format(epoch))
+            break
+        
+        best_elbo = max(current_elbo, best_elbo)
+    
     cprint("validation | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["log_px"]), np.mean(validation_data["kl"])))    
     
 
@@ -135,7 +154,8 @@ cprint("finished training")
 ######### Save VAE parameters #########
 cprint("Save VAE parameters")
 create_directory("dump/parameters")
-datetime=get_datetime()
+
+datetime = get_datetime()
 torch.save(vae.state_dict(), "dump/parameters/vae_parameters_{}.pt".format(datetime))
 torch.save(validation_data, "dump/parameters/validation_data_{}.pt".format(datetime))
 torch.save(training_data, "dump/parameters/training_data_{}.pt".format(datetime))
