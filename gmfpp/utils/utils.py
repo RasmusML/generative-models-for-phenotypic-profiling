@@ -12,6 +12,3 @@ def cprint(s: str):
     clock = get_clock_time()
     print("{} | {}".format(clock, s))
 
-
-
-    

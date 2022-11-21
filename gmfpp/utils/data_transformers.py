@@ -1,6 +1,9 @@
 from typing import List, Set, Dict, Tuple, Optional, Any
 import torch
 import numpy as np
+from torch.utils.data import DataLoader, Dataset
+import pandas as pd
+
 
 def view_flat_samples(data: torch.Tensor) -> torch.Tensor:
     """
@@ -32,3 +35,24 @@ def view_as_image_plot_format(image: torch.Tensor) -> torch.Tensor:
         out:(height, width, channel)
     '''
     return image.permute(1,2,0)
+    
+class SingleCellDataset(Dataset):
+    
+    def __init__(self, metadata: pd.DataFrame, images: torch.Tensor, label_to_id: Dict[str, int]):
+        self.metadata = metadata
+        self.label_to_id = label_to_id
+        self.images = images
+        
+    def __len__(self):
+        return self.metadata.shape[0]
+
+    def __getitem__(self, idx):
+        row = self.metadata.iloc[idx]
+        
+        image_id = row["Single_Cell_Image_Id"]
+        image = self.images[image_id]
+        
+        label_name = row["moa"]
+        label = self.label_to_id[label_name]
+        
+        return image, label

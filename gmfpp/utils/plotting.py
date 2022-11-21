@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from gmfpp.utils.data_transformers import view_as_image_plot_format, clip_image_to_zero_one
 
-def plot_image(image: torch.Tensor, clip: bool = True):
+def plot_image(image: torch.Tensor, clip: bool = True, file=None, title=None):
     image = image.clone()
 
     if clip:
@@ -12,9 +12,14 @@ def plot_image(image: torch.Tensor, clip: bool = True):
 
     plot_image = view_as_image_plot_format(image)
     plt.imshow(plot_image)
-    plt.show()
+    #plt.show()
+    if file==None:
+        plt.show()
+    else: plt.savefig(file)
 
-def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool = True):
+
+
+def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool = True, file=None, title=None):
     image = image.clone()
 
     if clip:
@@ -43,4 +48,31 @@ def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool 
     ax.set_title("Combined")
     ax.imshow(view_as_image_plot_format(image))
 
-    fig.show()
+    if file==None:
+        plt.show()
+    else: plt.savefig(file)
+
+def plot_VAE_performance(elbo, log_px, kl, file=None, title=None):
+    fig, axs = plt.subplots(1, 3, figsize=(14,6), constrained_layout = True)
+    fig.suptitle(title, fontsize=16)
+    
+    ax1 = axs[0]
+    ax1.grid()
+    ax1.plot(log_px)
+    ax1.set_ylabel("elbo")
+    ax1.set_xlabel("epoch")
+    
+    ax2 = axs[1]
+    ax2.grid()
+    ax2.plot(log_px)
+    ax2.set_ylabel("log p(x)")
+    ax2.set_xlabel("epoch")
+    
+    ax3 = axs[2]
+    ax3.grid()
+    ax3.plot(kl)
+    ax3.set_ylabel("KL-divergence")
+    ax3.set_xlabel("epoch")
+    if file==None:
+        plt.show()
+    else: plt.savefig(file)
