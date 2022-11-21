@@ -6,10 +6,10 @@ class ReparameterizedDiagonalGaussian(Distribution):
     """
     A distribution `N(y | mu, sigma I)` compatible with the reparameterization trick given `epsilon ~ N(0, 1)`.
     """
-    def __init__(self, mu: Tensor, log_sigma:Tensor):
+    def __init__(self, mu: Tensor, log_sigma:Tensor, epsilon: float = 0):
         assert mu.shape == log_sigma.shape, f"Tensors `mu` : {mu.shape} and ` log_sigma` : {log_sigma.shape} must be of the same shape"
         self.mu = mu
-        self.sigma = log_sigma.exp()
+        self.sigma = log_sigma.exp() + epsilon
         
     def sample_epsilon(self) -> Tensor:
         """`\eps ~ N(0, I)`"""
