@@ -23,15 +23,6 @@ def normalize_channels_inplace(data: torch.Tensor):
     for i in range(view.shape[0]):
         view[i] /= torch.max(view[i])
 
-def prepare_raw_images(images: List[np.ndarray]) -> torch.Tensor:
-    """
-        in:  [sample, height, width, channel]
-        out: [sample, channel, height, width]
-    """
-    result = torch.tensor(np.array(images, dtype=np.float32)) 
-    result = result.permute(0, 3, 1, 2)
-    return result
-
 def clip_image_to_zero_one(image: torch.Tensor) -> torch.Tensor:
     return torch.clamp(image, 0., 1.)
 

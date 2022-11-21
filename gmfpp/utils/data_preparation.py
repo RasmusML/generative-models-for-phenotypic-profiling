@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 from gmfpp.utils.utils import *
+import torch
 
 def read_metadata(path: str) -> pd.DataFrame:
     result = pd.read_csv(path)
@@ -64,14 +65,15 @@ def get_relative_image_folders(metadata: pd.DataFrame) -> List[str]:
         result.append(folder)
         
     return result
-
-
-def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000) -> List[np.ndarray]:
-    result = []
+def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000):
+    image_0 = load_image(paths[0])
+    
+    dims = [len(paths)]+ list(image_0.shape)
+    result = torch.zeros(dims)
     
     for i, path in enumerate(paths):
         image = load_image(path)
-        result.append(image)
+        result[i] = image
     
         if verbose:
             if i % log_every == 0:
@@ -80,10 +82,10 @@ def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000
     if verbose:
         cprint("loaded {}/{} images ({:.2f}%).".format(len(paths), len(paths), 100))
         
-    return result
+    return result.permute(0, 3, 1, 2)
     
-def load_image(path: str) -> np.ndarray:
-    return np.load(path)
+def load_image(path: str) -> torch.Tensor:
+    return torch.tensor(np.array(np.load(path), dtype=np.float16)) 
 
 def drop_redundant_metadata_columns(metadata: pd.DataFrame) -> pd.DataFrame:
     " Drops unused and redundant columns "
