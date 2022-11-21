@@ -16,7 +16,7 @@ def plot_image(image: torch.Tensor, clip: bool = True, file=None, title=None):
     if file==None:
         plt.show()
     else: plt.savefig(file)
-
+    plt.close()
 
 
 def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool = True, file=None, title=None):
@@ -51,6 +51,8 @@ def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool 
     if file==None:
         plt.show()
     else: plt.savefig(file)
+    plt.close()
+
 
 def plot_VAE_performance(elbo, log_px, kl, file=None, title=None):
     fig, axs = plt.subplots(1, 3, figsize=(14,6), constrained_layout = True)
@@ -76,3 +78,4 @@ def plot_VAE_performance(elbo, log_px, kl, file=None, title=None):
     if file==None:
         plt.show()
     else: plt.savefig(file)
+    plt.close()

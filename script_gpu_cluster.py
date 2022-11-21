@@ -132,8 +132,6 @@ for epoch in range(num_epochs):
 
 cprint("finished training")
 
-
-######### Save VAE parameters #########
 ######### Save VAE parameters #########
 cprint("Save VAE parameters")
 create_directory("dump/parameters")
@@ -142,8 +140,6 @@ torch.save(vae.state_dict(), "dump/parameters/vae_parameters_{}.pt".format(datet
 torch.save(validation_data, "dump/parameters/validation_data_{}.pt".format(datetime))
 torch.save(training_data, "dump/parameters/training_data_{}.pt".format(datetime))
 torch.save(VAE_settings, "dump/parameters/VAE_settings_{}.pt".format(datetime))
-
-
 
 ######### extract a few images already #########
 cprint("Extract a few images already")
@@ -157,19 +153,16 @@ plot_VAE_performance(**validation_data, file='dump/images/validation_data.png', 
 n = 10
 for i in range(n):
     x, y = train_set[i]    
-    x = x.to(device)
     plot_image_channels(x, file="dump/images/x_{}.png".format(i))
-   
+    x = x.to(device)
     outputs = vae(x[None,:,:,:])
     px = outputs["px"]
     
     x_reconstruction = px.sample()
     x_reconstruction = x_reconstruction[0]
-    plot_image_channels(x_reconstruction, file="dump/images/x_reconstruction_{}.png".format(i))
+    plot_image_channels(x_reconstruction.to("cpu"), file="dump/images/x_reconstruction_{}.png".format(i))
     
 
 cprint("saved images")
 cprint("script done.")
-
-
 
