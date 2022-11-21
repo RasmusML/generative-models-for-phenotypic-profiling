@@ -36,11 +36,12 @@ cprint(f"Using device: {device}")
 
 ######### loading data #########
 
-path = get_server_directory_path()
-#path = "data/all/"
+#path = get_server_directory_path()
+path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
+#metadata = metadata[:1000]
+#metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
 cprint("loaded metadata")
 
 cprint("loading images")
@@ -68,7 +69,7 @@ cprint("VAE Configs")
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
-                                                                    num_epochs = 1000,
+                                                                    num_epochs = 50,
                                                                     batch_size = min(32, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
@@ -88,7 +89,7 @@ num_epochs = VAE_settings['num_epochs']
 batch_size = VAE_settings['batch_size']
 
 impatience_level = 0
-max_patience = 10
+max_patience = 1000
 
 best_elbo = np.finfo(np.float64).min
 
@@ -136,7 +137,6 @@ for epoch in range(num_epochs):
         impatience_level += 1
         
         current_elbo = validation_data["elbo"][-1]
-        print(impatience_level, current_elbo, best_elbo)
         if current_elbo > best_elbo:
             impatience_level = 0 
         
@@ -172,7 +172,7 @@ plot_VAE_performance(**validation_data, file='dump/images/validation_data.png', 
 
 n = 10
 for i in range(n):
-    x, y = train_set[i]    
+    x, y = train_set[i]
     plot_image_channels(x, file="dump/images/x_{}.png".format(i))
     x = x.to(device)
     outputs = vae(x[None,:,:,:])
@@ -181,7 +181,7 @@ for i in range(n):
     
     x_reconstruction = px.sample()
     x_reconstruction = x_reconstruction[0]
-    plot_image_channels(x_reconstruction.to("cpu"), file="dump/images/x_reconstruction_{}.png".format(i))
+    plot_image_channels(x_reconstruction.cpu(), file="dump/images/x_reconstruction_{}.png".format(i))
     
 
 cprint("saved images")
