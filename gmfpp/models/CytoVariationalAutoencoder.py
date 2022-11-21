@@ -94,7 +94,9 @@ class CytoVariationalAutoencoder(nn.Module):
         h_x = self.encoder(x)
         
         mu, log_sigma =  h_x.chunk(2, dim=-1)
-        log_sigma = torch.maximum(log_sigma, torch.ones_like(log_sigma) * -10)
+
+        #log_sigma = torch.maximum(log_sigma, torch.ones_like(log_sigma) * -10)
+        log_sigma=torch.nn.functional.leaky_relu(log_sigma, negative_slope=0.01)
         # return a distribution `q(x|x) = N(z | \mu(x), \sigma(x))`
         return ReparameterizedDiagonalGaussian(mu, log_sigma)
     
@@ -114,7 +116,7 @@ class CytoVariationalAutoencoder(nn.Module):
         mu = mu.view(-1, *self.input_shape) # reshape the output
         log_sigma = log_sigma.view(-1, *self.input_shape) # reshape the output
         
-        return Normal(loc=mu, scale=torch.exp(log_sigma) , validate_args=False)
+        return Normal(loc=mu, scale=torch.exp(log_sigma), validate_args=False)
 
     def forward(self, x) -> Dict[str, Any]:
         """compute the posterior q(z|x) (encoder), sample z~q(z|x) and return the distribution p(x|z) (decoder)"""
