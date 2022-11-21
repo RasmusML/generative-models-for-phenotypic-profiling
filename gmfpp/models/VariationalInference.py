@@ -15,22 +15,16 @@ class VariationalInference(nn.Module):
         self.beta = beta
         
     def forward(self, model:nn.Module, x:Tensor) -> Tuple[Tensor, Dict]:
-        # forward pass through the model
         outputs = model(x)
 
-        # unpack outputs
         px, pz, qz, z = [outputs[k] for k in ["px", "pz", "qz", "z"]]
         
-        # evaluate log probabilities
         log_px = reduce(px.log_prob(x))
         log_pz = reduce(pz.log_prob(z))
         log_qz = reduce(qz.log_prob(z))
         
-        # compute the ELBO with and without the beta parameter: 
-        # `L^\beta = E_q [ log p(x|z) ] - \beta * D_KL(q(z|x) | p(z))`
-        # where `D_KL(q(z|x) | p(z)) = log q(z|x) - log p(z)`
         kl = log_qz - log_pz
-        elbo = log_px - kl
+        #elbo = log_px - kl
         beta_elbo = log_px - self.beta*kl
         
         # loss
@@ -38,7 +32,7 @@ class VariationalInference(nn.Module):
         
         # prepare the output
         with torch.no_grad():
-            diagnostics = {'elbo': elbo, 'log_px':log_px, 'kl': kl}
+            diagnostics = {'elbo': beta_elbo, 'log_px':log_px, 'kl': kl}
             
         return loss, diagnostics, outputs
       
