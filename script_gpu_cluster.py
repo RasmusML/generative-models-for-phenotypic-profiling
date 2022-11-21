@@ -158,6 +158,7 @@ for i in range(n):
     outputs = vae(x[None,:,:,:])
     px = outputs["px"]
     
+    
     x_reconstruction = px.sample()
     x_reconstruction = x_reconstruction[0]
     plot_image_channels(x_reconstruction.to("cpu"), file="dump/images/x_reconstruction_{}.png".format(i))
