@@ -8,7 +8,9 @@ def get_datetime():
     result = strftime("%Y-%m-%d - %H-%M-%S", gmtime())
     return result
     
-def cprint(s: str):
+def cprint(s: str, file=None):    
     clock = get_clock_time()
     print("{} | {}".format(clock, s))
-
+    if not file == None:
+        file.write("{} | {}".format(clock, s))
+    
