@@ -1,6 +1,5 @@
 from typing import List, Set, Dict, Tuple, Optional, Any
 from collections import defaultdict
-
 import pandas as pd
 import seaborn as sns
 import numpy as np
@@ -42,7 +41,7 @@ cprint(f"Using device: {device}")
 path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-#metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
+metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
 cprint("loaded metadata")
 
 cprint("loading images")
@@ -58,6 +57,7 @@ cprint("normalized images")
 
 
 ######### VAE Configs #########
+cprint("VAE Configs")
 image_shape = np.array([3, 68, 68])
 latent_features = 256
 
@@ -70,6 +70,7 @@ vi = VariationalInference(beta=beta)
 
 
 ######### Training Configs #########
+cprint("Training Configs")
 num_epochs = 10
 batch_size = 32
 
@@ -81,6 +82,7 @@ train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_wo
 
 
 ######### VAE Training #########
+cprint("VAE Training")
 
 training_data = defaultdict(list)
 validation_data = defaultdict(list)
@@ -129,11 +131,17 @@ cprint("finished training")
 
 
 ######### Save VAE parameters #########
+cprint("Save VAE parameters")
 create_directory("dump/parameters")
 torch.save(vae.state_dict(), "dump/parameters/vae_parameters.pt")
+torch.save(validation_data, "dump/parameters/validation_data.pt")
+torch.save(training_data, "dump/parameters/training_data.pt")
+
+
 
 
 ######### extract a few images already #########
+cprint("Extract a few images already")
 create_directory("dump/images")
 
 vae.eval() # because of batch normalization

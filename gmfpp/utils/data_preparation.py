@@ -85,7 +85,7 @@ def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000
     return result.permute(0, 3, 1, 2)
     
 def load_image(path: str) -> torch.Tensor:
-    return torch.tensor(np.array(np.load(path), dtype=np.float16)) 
+    return torch.tensor(np.array(np.load(path), dtype=np.float32)) 
 
 def drop_redundant_metadata_columns(metadata: pd.DataFrame) -> pd.DataFrame:
     " Drops unused and redundant columns "
