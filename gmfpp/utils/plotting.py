@@ -28,7 +28,8 @@ def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool 
         image = clip_image_to_zero_one(image)
 
     fig, axs = plt.subplots(1, 4, figsize=(14,6))
-    
+    if not title == None: fig.suptitle(title, fontsize=14)
+
     channel_names = ["DNA", "F-actin", "B-tubulin"]
     for i, name in enumerate(channel_names):
         if colorized:
