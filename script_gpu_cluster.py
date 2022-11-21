@@ -69,7 +69,7 @@ cprint("VAE Configs")
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
-                                                                    num_epochs = 50,
+                                                                    num_epochs = 80,
                                                                     batch_size = min(32, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
@@ -89,7 +89,7 @@ num_epochs = VAE_settings['num_epochs']
 batch_size = VAE_settings['batch_size']
 
 impatience_level = 0
-max_patience = 1000
+max_patience = 10
 
 best_elbo = np.finfo(np.float64).min
 
