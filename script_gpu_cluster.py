@@ -51,7 +51,7 @@ cprint("loaded metadata",logfile)
 cprint("loading images", logfile)
 relative_paths = get_relative_image_paths(metadata)
 image_paths = [path + relative for relative in relative_paths]
-images = load_images(image_paths, verbose=True, log_every=10000)
+images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
 mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
 normalize_channels_inplace(images)

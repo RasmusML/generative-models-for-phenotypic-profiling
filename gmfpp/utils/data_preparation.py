@@ -66,7 +66,7 @@ def get_relative_image_folders(metadata: pd.DataFrame) -> List[str]:
         
     return result
 
-def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000):
+def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000, logfile=None):
     image_0 = load_image(paths[0])
     
     dims = [len(paths)] + list(image_0.shape)
@@ -78,10 +78,10 @@ def load_images(paths: List[str], verbose: bool = False, log_every: int = 10_000
     
         if verbose:
             if i % log_every == 0:
-                cprint("loaded {}/{} images ({:.2f}%).".format(i, len(paths), i  / len(paths) * 100))
+                cprint("loaded {}/{} images ({:.2f}%).".format(i, len(paths), i  / len(paths) * 100), logfile)
 
     if verbose:
-        cprint("loaded {}/{} images ({:.2f}%).".format(len(paths), len(paths), 100))
+        cprint("loaded {}/{} images ({:.2f}%).".format(len(paths), len(paths), 100), logfile)
         
     return result.permute(0, 3, 1, 2)
     

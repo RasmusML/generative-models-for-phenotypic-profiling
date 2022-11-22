@@ -12,5 +12,5 @@ def cprint(s: str, file=None):
     clock = get_clock_time()
     print("{} | {}".format(clock, s))
     if not file == None:
-        file.write("{} | {}".format(clock, s))
-    
+        file.write("{} | {}\n".format(clock, s))
+        file.flush()
