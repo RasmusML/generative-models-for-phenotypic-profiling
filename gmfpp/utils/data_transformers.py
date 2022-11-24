@@ -21,10 +21,36 @@ def view_channel_dim_first(data: torch.Tensor) -> torch.Tensor:
     return torch.permute(data, dims=(1,0,2,3))
 
 def normalize_channels_inplace(data: torch.Tensor):
-    """ input shape: [sample, channel, height, width] """
+    """ 
+        Normalize by max channel across all images: X_i / max(X_i)
+        input shape: [sample, channel, height, width]
+    """
     view = view_channel_dim_first(data)
     for i in range(view.shape[0]):
         view[i] /= torch.max(view[i])
+
+def normalize_every_image_channels_seperately_inplace(images: torch.Tensor):
+    """ 
+        As the original paper: X_ij / max(X_ij)
+        input shape: [sample, channel, height, width] 
+    """
+    flat_images = images.reshape(images.size(0), 3, -1)
+    
+    max_values, _ =  torch.max(flat_images, dim=-1)
+    view_max_expanded = max_values[:,:,None].expand(images.size(0), 3, 4624)
+    
+    flat_images /= view_max_expanded
+    
+def normalize_channels_by_max_inplace(data: torch.Tensor):
+    """ 
+        X / 40,000
+        input shape: [sample, channel, height, width] 
+    """
+    data /= 40_000
+    
+ 
+def img_saturate(img: torch.Tensor) -> torch.Tensor:
+    return img / np.max(img)
 
 def clip_image_to_zero_one(image: torch.Tensor) -> torch.Tensor:
     return torch.clamp(image, 0., 1.)

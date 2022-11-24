@@ -27,12 +27,11 @@ from gmfpp.models.LoadModels import *
 
 ######### Utilities #########
 
-torch.manual_seed(0)
-torch.cuda.manual_seed(0)
+constant_seed()
 
-datetime=get_datetime()
+datetime = get_datetime()
 create_directory("dump/logs")
-logfile = open("./dump/logs/log_{}.log".format(datetime), "w")
+logfile = create_logfile("./dump/logs/log_{}.log".format(datetime))
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 cprint(f"Using device: {device}", logfile)

@@ -129,3 +129,19 @@ def get_MOA_mappings(metadata: pd.DataFrame) -> Dict[str, int]:
     labels = metadata["moa"].unique()
     labels.sort()
     return get_label_mappings(labels)
+    
+
+def get_MOA_to_id() -> Dict[str, int]:
+    return {'Actin disruptors': 0,
+            'Aurora kinase inhibitors': 1,
+            'Cholesterol-lowering': 2,
+            'DMSO': 3,
+            'DNA damage': 4,
+            'DNA replication': 5,
+            'Eg5 inhibitors': 6,
+            'Epithelial': 7,
+            'Kinase inhibitors': 8,
+            'Microtubule destabilizers': 9,
+            'Microtubule stabilizers': 10,
+            'Protein degradation': 11,
+            'Protein synthesis': 12}
