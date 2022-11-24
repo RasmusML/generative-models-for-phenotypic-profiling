@@ -43,8 +43,7 @@ cprint(f"Using device: {device}", logfile)
 path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-#metadata = metadata[:1000]
-#metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
+metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
@@ -73,7 +72,7 @@ cprint("VAE Configs", logfile)
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
                                                                     num_epochs = 80,
-                                                                    batch_size = min(32, len(train_set)),
+                                                                    batch_size = min(128, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
                                                                     image_shape = np.array([3, 68, 68]))
