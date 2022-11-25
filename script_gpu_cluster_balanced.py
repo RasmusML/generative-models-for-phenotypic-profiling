@@ -50,8 +50,8 @@ cprint("loaded metadata",logfile)
 cprint("loading images", logfile)
 relative_paths = get_relative_image_paths(metadata)
 image_paths = [path + relative for relative in relative_paths]
-images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
-#images = torch.load("images.pt")
+#images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
+images = torch.load("images.pt")
 cprint("loaded images", logfile)
 
 normalize_every_image_channels_seperately_inplace(images)
@@ -82,7 +82,7 @@ optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'],
 vi = VariationalInference(beta=VAE_settings['beta'])
 
 #train_loader = DataLoader(train_set, batch_size=VAE_settings['batch_size'], shuffle=True, num_workers=0, drop_last=True)
-validation_loader = DataLoader(validation_set, batch_size=len(validation_set), shuffle=False, num_workers=0, drop_last=False)
+validation_loader = DataLoader(validation_set, batch_size=VAE_settings['batch_size'], shuffle=False, num_workers=0, drop_last=False)
 train_batcher = TreatmentBalancedBatchGenerator(images, metadata_train)
 
 ######### VAE Training #########
@@ -96,12 +96,14 @@ iterations = 40_000
 validate_every = 100
 
 for iteration in range(iterations):
+    print(iteration)
     x, _ = train_batcher.next_batch()
+    x = x.to(device)
     
     vae.train()
     
     loss, diagnostics, outputs = vi(vae, x)
-
+    
     optimizer.zero_grad()
     loss.backward()
     nn.utils.clip_grad_norm_(vae.parameters(), 10_000)
@@ -110,17 +112,17 @@ for iteration in range(iterations):
     if iteration % validate_every == 0:
         with torch.no_grad():
             vae.eval()
-
+            
             validation_epoch_data = defaultdict(list)
-
+            
             for x, _ in validation_loader:
                 x = x.to(device)
-
+                
                 loss, diagnostics, outputs = vi(vae, x)
-
+                
                 for k, v in diagnostics.items():
                     validation_epoch_data[k] += [v.mean().item()]
-
+            
             for k, v in diagnostics.items():
                 validation_data[k] += [np.mean(validation_epoch_data[k])]
         
