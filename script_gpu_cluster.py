@@ -43,7 +43,7 @@ cprint(f"Using device: {device}", logfile)
 path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
+#metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
