@@ -50,7 +50,7 @@ def normalize_channels_by_max_inplace(data: torch.Tensor):
     
  
 def img_saturate(img: torch.Tensor) -> torch.Tensor:
-    return img / np.max(img)
+    return img / torch.max(img)
 
 def clip_image_to_zero_one(image: torch.Tensor) -> torch.Tensor:
     return torch.clamp(image, 0., 1.)

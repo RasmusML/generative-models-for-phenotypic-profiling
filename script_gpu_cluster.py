@@ -52,7 +52,7 @@ image_paths = [path + relative for relative in relative_paths]
 images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
 mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
-normalize_channels_inplace(images)
+normalize_every_image_channels_seperately_inplace(images)
 cprint("normalized images", logfile)
 
 
@@ -71,7 +71,7 @@ cprint("VAE Configs", logfile)
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
-                                                                    num_epochs = 80,
+                                                                    num_epochs = 50,
                                                                     batch_size = min(128, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
@@ -91,7 +91,7 @@ num_epochs = VAE_settings['num_epochs']
 batch_size = VAE_settings['batch_size']
 
 impatience_level = 0
-max_patience = 10
+max_patience = 100
 
 best_elbo = np.finfo(np.float64).min
 
@@ -140,13 +140,12 @@ for epoch in range(num_epochs):
         
         current_elbo = validation_data["elbo"][-1]
         if current_elbo > best_elbo:
-            impatience_level = 0 
+            impatience_level = 0
+            best_elbo = current_elbo
         
         if impatience_level > max_patience:
             cprint("no more patience left at epoch {}".format(epoch), logfile)
             break
-        
-        best_elbo = max(current_elbo, best_elbo)
     
     cprint("validation | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["log_px"]), np.mean(validation_data["kl"])), logfile)    
     

@@ -4,8 +4,8 @@ from collections import defaultdict
 
 
 def LoadVAEmodel(folder, datetime):
-    validation_data = torch.load(folder + "/validation_performance_{}.pt".format(datetime), map_location=torch.device('cpu'))
-    training_data = torch.load(folder + "/training_performance{}.pt".format(datetime), map_location=torch.device('cpu'))
+    validation_data = torch.load(folder + "/validation_data_{}.pt".format(datetime), map_location=torch.device('cpu'))
+    training_data = torch.load(folder + "/training_data_{}.pt".format(datetime), map_location=torch.device('cpu'))
     VAE_settings = torch.load(folder + "/VAE_settings_{}.pt".format(datetime), map_location=torch.device('cpu'))
     vae = CytoVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
     vae.load_state_dict(torch.load(folder + "/vae_parameters_{}.pt".format(datetime), map_location=torch.device('cpu')))
