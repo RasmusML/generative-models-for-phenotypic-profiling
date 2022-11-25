@@ -39,17 +39,18 @@ cprint(f"Using device: {device}", logfile)
 
 ######### loading data #########
 
-#path = get_server_directory_path()
-path = "data/all/"
+path = get_server_directory_path()
+#path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-#metadata = metadata[:100] # @TODO: figure what to do loading the imabes below gets _very_ slow after 50_000 images
+#metadata = metadata[:100]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
 relative_paths = get_relative_image_paths(metadata)
 image_paths = [path + relative for relative in relative_paths]
 images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
+#images = torch.load("images.pt")
 mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
 normalize_every_image_channels_seperately_inplace(images)
@@ -57,12 +58,10 @@ cprint("normalized images", logfile)
 
 
 metadata = shuffle_metadata(metadata)
-metadata_train_all, metadata_test = split_metadata(metadata, split_fraction = .90)
-metadata_train, metadata_validation = split_metadata(metadata_train_all, split_fraction = .90)
+metadata_train, metadata_validation = split_metadata(metadata, split_fraction = .90)
 
 train_set = SingleCellDataset(metadata_train, images, mapping)
 validation_set = SingleCellDataset(metadata_validation, images, mapping)
-test_set = SingleCellDataset(metadata_test, images, mapping)
 
 
 ######### VAE Configs #########
@@ -72,7 +71,7 @@ cprint("VAE Configs", logfile)
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
                                                                     num_epochs = 50,
-                                                                    batch_size = min(128, len(train_set)),
+                                                                    batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
                                                                     image_shape = np.array([3, 68, 68]))
