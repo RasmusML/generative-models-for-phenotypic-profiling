@@ -74,8 +74,8 @@ class SingleCellDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.metadata.iloc[idx]
-        
-        image_id = row["Single_Cell_Image_Id"]
+
+        image_id = row.name
         image = self.images[image_id]
         
         label_name = row["moa"]
