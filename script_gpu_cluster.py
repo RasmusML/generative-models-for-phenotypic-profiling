@@ -187,3 +187,6 @@ for i in range(n):
 cprint("saved images", logfile)
 cprint("script done.", logfile)
 
+
+
+plot_control_vs_target_cells(vae=vae, validation_data=validation_data, training_data=training_data, VAE_settings=VAE_settings, val_set_obs_1=0, val_set_obs_2=1)
