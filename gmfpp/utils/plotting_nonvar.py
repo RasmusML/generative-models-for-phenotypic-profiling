@@ -61,7 +61,7 @@ def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool 
 
     plt.close()
 
-
+ 
 def plot_VAE_performance(elbo, mse_loss, kl, file=None, title=None):
     fig, axs = plt.subplots(1, 3, figsize=(14,6), constrained_layout = True)
     fig.suptitle(title, fontsize=16)
