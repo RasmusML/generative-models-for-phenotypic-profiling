@@ -15,13 +15,13 @@ from torch.utils.data import DataLoader, Dataset
 
 from gmfpp.utils.data_preparation import *
 from gmfpp.utils.data_transformers import *
-from gmfpp.utils.plotting import *
+from gmfpp.utils.plotting_nonvar import *
 
 from gmfpp.models.ReparameterizedDiagonalGaussian import *
-from gmfpp.models.CytoVariationalAutoencoder import *
+from gmfpp.models.CytoVariationalAutoencoder_nonvar import *
 from gmfpp.models.VariationalAutoencoder import *
 from gmfpp.models.ConvVariationalAutoencoder import *
-from gmfpp.models.VariationalInference import *
+from gmfpp.models.VariationalInference_nonvar import *
 from gmfpp.utils.utils import *
 from gmfpp.models.LoadModels import *
 
@@ -43,7 +43,7 @@ cprint(f"Using device: {device}", logfile)
 path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:2]
+metadata = metadata[:10000]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
@@ -75,6 +75,8 @@ vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
                                                                     image_shape = np.array([3, 68, 68]))
+
+vae = CytoVariationalAutoencoder_nonvar(VAE_settings['image_shape'], VAE_settings['latent_features'])
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
 
