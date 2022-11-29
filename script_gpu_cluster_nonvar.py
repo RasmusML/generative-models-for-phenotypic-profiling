@@ -40,10 +40,10 @@ cprint(f"Using device: {device}", logfile)
 ######### loading data #########
 
 #path = get_server_directory_path()
-path = "data/all/"
+path = "data/two_from_each_compound/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:10000]
+metadata = metadata[:10]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
@@ -59,6 +59,7 @@ cprint("normalized images", logfile)
 
 metadata = shuffle_metadata(metadata)
 metadata_train, metadata_validation = split_metadata(metadata, split_fraction = .90)
+metadata_train, metadata_validation = metadata, metadata
 
 train_set = SingleCellDataset(metadata_train, images, mapping)
 validation_set = SingleCellDataset(metadata_validation, images, mapping)
@@ -70,7 +71,7 @@ cprint("VAE Configs", logfile)
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
-                                                                    num_epochs = 50,
+                                                                    num_epochs = 1000,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
@@ -80,7 +81,7 @@ vae = CytoVariationalAutoencoder_nonvar(VAE_settings['image_shape'], VAE_setting
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
 
-vi = VariationalInference(beta=VAE_settings['beta'])
+vi = VariationalInference_nonvar(beta=VAE_settings['beta'])
 
 train_loader = DataLoader(train_set, batch_size=VAE_settings['batch_size'], shuffle=True, num_workers=0, drop_last=True)
 validation_loader = DataLoader(validation_set, batch_size=VAE_settings['batch_size'], shuffle=False, num_workers=0, drop_last=False)
@@ -91,7 +92,7 @@ cprint("VAE Training", logfile)
 num_epochs = VAE_settings['num_epochs']
 batch_size = VAE_settings['batch_size']
 
-print_every = 1
+print_every = 100
 impatience_level = 0
 max_patience = 100
 
@@ -143,13 +144,13 @@ for epoch in range(num_epochs):
             impatience_level = 0
             best_elbo = current_elbo
         
-        if impatience_level > max_patience:
-            cprint("no more patience left at epoch {}".format(epoch), logfile)
-            break
+        #if impatience_level > max_patience:
+        #    cprint("no more patience left at epoch {}".format(epoch), logfile)
+        #    break
     if epoch % print_every == 0:
         cprint(f"epoch: {epoch}/{num_epochs}", logfile)  
-        cprint("training | elbo: {:2f}, mse_loss: {:.2f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
-        cprint("validation | elbo: {:2f}, mse_loss: {:.2f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    
+        cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
+        cprint("validation | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    
 
     
 

@@ -10,7 +10,7 @@ def reduce(x:Tensor) -> Tensor:
     flat = view_flat_samples(x)
     return flat.sum(dim=1)
 
-class VariationalInference(nn.Module):
+class VariationalInference_nonvar(nn.Module):
     def __init__(self, beta:float=1.):
         super().__init__()
         self.beta = beta
@@ -23,10 +23,14 @@ class VariationalInference(nn.Module):
         mse_loss = ((x_hat - x)**2).mean(axis=[1,2,3])
         log_pz = reduce(pz.log_prob(z))
         log_qz = reduce(qz.log_prob(z))
+        #print("mse_loss.shape", mse_loss.shape)        
+        #print("log_pz.shape", log_pz.shape)
+        #print("log_qz.shape", log_qz.shape) # all have shape torch.Size([batch size]) - as they should
         
         kl = log_qz - log_pz
         #elbo = log_px - kl
-        beta_elbo = -mse_loss - self.beta*kl
+        #beta_elbo = log_px - self.beta * kl
+        beta_elbo = -mse_loss - self.beta * kl
         
         # loss
         loss = -beta_elbo.mean()

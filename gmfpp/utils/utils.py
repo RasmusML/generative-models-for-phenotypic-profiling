@@ -16,7 +16,7 @@ def cprint(s: str, file=None):
     print("{} | {}".format(clock, s))
 
     if file:
-        file.write("{} | {}".format(clock, s))
+        file.write("{} | {}\n\r".format(clock, s))
         file.flush()
     
 def create_logfile(filepath: str):
