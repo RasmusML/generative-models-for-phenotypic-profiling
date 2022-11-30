@@ -68,7 +68,7 @@ def plot_VAE_performance(elbo, mse_loss, kl, file=None, title=None):
     
     ax1 = axs[0]
     ax1.grid()
-    ax1.plot(mse_loss)
+    ax1.plot(elbo)
     ax1.set_ylabel("elbo")
     ax1.set_xlabel("epoch")
     

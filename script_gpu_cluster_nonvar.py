@@ -70,13 +70,13 @@ cprint("VAE Configs", logfile)
 
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
-                                                                    beta = 1.,
-                                                                    num_epochs = 1000,
+                                                                    beta = 0.0,
+                                                                    num_epochs = 5000,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
                                                                     image_shape = np.array([3, 68, 68]))
-
+cprint("VAE_settings: ", VAE_settings)
 vae = CytoVariationalAutoencoder_nonvar(VAE_settings['image_shape'], VAE_settings['latent_features'])
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
@@ -105,7 +105,6 @@ for epoch in range(num_epochs):
     
     for x, _ in train_loader:
         x = x.to(device)
-        
         # perform a forward pass through the model and compute the ELBO
         loss, diagnostics, outputs = vi(vae, x)
         
@@ -152,7 +151,6 @@ for epoch in range(num_epochs):
         cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
         cprint("validation | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    
 
-    
 
 cprint("finished training", logfile)
 
@@ -163,8 +161,8 @@ create_directory("dump/parameters")
 datetime = get_datetime()
 torch.save(vae.state_dict(), "dump/parameters/vae_parameters_{}.pt".format(datetime))
 torch.save(validation_data, "dump/parameters/validation_data_{}.pt".format(datetime))
-torch.save(training_data, "dump/parameters/training_data_{}.pt".format(datetime))
-torch.save(VAE_settings, "dump/parameters/VAE_settings_{}.pt".format(datetime))
+#torch.save(training_data, "dump/parameters/training_data_{}.pt".format(datetime))
+#torch.save(VAE_settings, "dump/parameters/VAE_settings_{}.pt".format(datetime))
 
 ######### extract a few images already #########
 cprint("Extract a few images already", logfile)
@@ -174,6 +172,8 @@ vae.eval() # because of batch normalization
 
 plot_VAE_performance(**training_data, file='dump/images/training_data.png', title='VAE - learning')
 plot_VAE_performance(**validation_data, file='dump/images/validation_data.png', title='VAE - validation')
+#plot_VAE_performance(training_data['elbo'], training_data['mse_loss'], training_data['kl'], title='VAE - learning')
+#plot_VAE_performance(**validation_data,title='VAE - validation')
 
 n = 2
 for i in range(n):
@@ -187,7 +187,7 @@ for i in range(n):
     x_reconstruction = x_hat
     x_reconstruction = x_reconstruction[0].detach()
     plot_image_channels(x_reconstruction.cpu(), file="dump/images/x_reconstruction_{}.png".format(i))
-    
+    #plot_image_channels(x_reconstruction.cpu())
 
 cprint("saved images", logfile)
 cprint("script done.", logfile)

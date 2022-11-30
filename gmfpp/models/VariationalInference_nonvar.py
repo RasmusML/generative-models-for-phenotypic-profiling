@@ -23,11 +23,15 @@ class VariationalInference_nonvar(nn.Module):
         mse_loss = ((x_hat - x)**2).mean(axis=[1,2,3])
         log_pz = reduce(pz.log_prob(z))
         log_qz = reduce(qz.log_prob(z))
+        #print("qz.sigma.shape: ", qz.sigma.shape)
         #print("mse_loss.shape", mse_loss.shape)        
         #print("log_pz.shape", log_pz.shape)
         #print("log_qz.shape", log_qz.shape) # all have shape torch.Size([batch size]) - as they should
         
-        kl = log_qz - log_pz
+        #kl = log_qz - log_pz
+        kl = - (.5 * (1 + (qz.sigma ** 2).log() - qz.mu ** 2 - qz.sigma**2)).sum(axis=[1])
+
+
         #elbo = log_px - kl
         #beta_elbo = log_px - self.beta * kl
         beta_elbo = -mse_loss - self.beta * kl
