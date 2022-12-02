@@ -28,10 +28,10 @@ from gmfpp.models.LoadModels import *
 ######### Utilities #########
 
 constant_seed()
-
 datetime = get_datetime()
-create_directory("dump/logs")
-logfile = create_logfile("./dump/logs/log_{}.log".format(datetime))
+output_folder = "dump/outputs_{}/".format(datetime)
+create_directory(output_folder)
+logfile = create_logfile(output_folder + "log.log")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 cprint(f"Using device: {device}", logfile)
@@ -70,7 +70,7 @@ cprint("VAE Configs", logfile)
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.0,
-                                                                    num_epochs = 5000,
+                                                                    num_epochs = 500,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 1e-3,
@@ -155,30 +155,30 @@ cprint("finished training", logfile)
 
 ######### Save VAE parameters #########
 cprint("Save VAE parameters", logfile)
-create_directory("dump/parameters")
+create_directory(output_folder + "parameters")
 
 datetime = get_datetime()
-torch.save(vae.state_dict(), "dump/parameters/vae_parameters_{}.pt".format(datetime))
-torch.save(validation_data, "dump/parameters/validation_data_{}.pt".format(datetime))
-#torch.save(training_data, "dump/parameters/training_data_{}.pt".format(datetime))
-#torch.save(VAE_settings, "dump/parameters/VAE_settings_{}.pt".format(datetime))
+torch.save(vae.state_dict(), output_folder + "parameters/vae_parameters_{}.pt".format(datetime))
+torch.save(validation_data, output_folder + "parameters/validation_data_{}.pt".format(datetime))
+torch.save(training_data, output_folder + "parameters/training_data_{}.pt".format(datetime))
+torch.save(VAE_settings, output_folder + "parameters/VAE_settings_{}.pt".format(datetime))
 
 ######### extract a few images already #########
 cprint("Extract a few images already", logfile)
-create_directory("dump/images")
+create_directory(output_folder + "images")
 
 vae.eval() # because of batch normalization
 
-plot_VAE_performance(**training_data, file='dump/images/training_data.png', title='VAE - learning')
-plot_VAE_performance(**validation_data, file='dump/images/validation_data.png', title='VAE - validation')
-plot_VAE_performance(training_data['elbo'], training_data['mse_loss'], training_data['kl'], title='VAE - learning')
-plot_VAE_performance(**validation_data,title='VAE - validation')
+plot_VAE_performance(**training_data, file=output_folder + "images/training_data.png", title='VAE - learning')
+plot_VAE_performance(**validation_data, file=output_folder + "images/validation_data.png", title='VAE - validation')
+#plot_VAE_performance(training_data['elbo'], training_data['mse_loss'], training_data['kl'], title='VAE - learning')
+#plot_VAE_performance(**validation_data,title='VAE - validation')
 
 n = 2
 for i in range(n):
     x, y = train_set[i]
-    #plot_image_channels(x, file="dump/images/x_{}.png".format(i))
-    plot_image_channels(x)
+    plot_image_channels(x, file=output_folder + "images/x_{}.png".format(i))
+    #plot_image_channels(x)
     x = x.to(device)
     outputs = vae(x[None,:,:,:])
     x_hat = outputs["x_hat"]
@@ -186,8 +186,8 @@ for i in range(n):
     
     x_reconstruction = x_hat
     x_reconstruction = x_reconstruction[0].detach()
-    #plot_image_channels(x_reconstruction.cpu(), file="dump/images/x_reconstruction_{}.png".format(i))
-    plot_image_channels(x_reconstruction.cpu())
+    plot_image_channels(x_reconstruction.cpu(), file=output_folder + "images/x_reconstruction_{}.png".format(i))
+    #plot_image_channels(x_reconstruction.cpu())
 
 cprint("saved images", logfile)
 cprint("script done.", logfile)
