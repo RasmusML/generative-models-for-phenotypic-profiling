@@ -43,7 +43,7 @@ cprint(f"Using device: {device}", logfile)
 path = "data/two_from_each_compound/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:10]
+metadata = metadata[:2]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
@@ -55,7 +55,6 @@ mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
 normalize_every_image_channels_seperately_inplace(images)
 cprint("normalized images", logfile)
-
 
 metadata = shuffle_metadata(metadata)
 metadata_train, metadata_validation = split_metadata(metadata, split_fraction = .90)
@@ -70,13 +69,13 @@ cprint("VAE Configs", logfile)
 
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
-                                                                    beta = 0.0,
+                                                                    beta = 1.0,
                                                                     num_epochs = 5000,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
-                                                                    weight_decay = 10e-4,
+                                                                    weight_decay = 1e-3,
                                                                     image_shape = np.array([3, 68, 68]))
-cprint("VAE_settings: ", VAE_settings)
+cprint("VAE_settings: {}".format(VAE_settings), logfile)
 vae = CytoVariationalAutoencoder_nonvar(VAE_settings['image_shape'], VAE_settings['latent_features'])
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
@@ -172,13 +171,14 @@ vae.eval() # because of batch normalization
 
 plot_VAE_performance(**training_data, file='dump/images/training_data.png', title='VAE - learning')
 plot_VAE_performance(**validation_data, file='dump/images/validation_data.png', title='VAE - validation')
-#plot_VAE_performance(training_data['elbo'], training_data['mse_loss'], training_data['kl'], title='VAE - learning')
-#plot_VAE_performance(**validation_data,title='VAE - validation')
+plot_VAE_performance(training_data['elbo'], training_data['mse_loss'], training_data['kl'], title='VAE - learning')
+plot_VAE_performance(**validation_data,title='VAE - validation')
 
 n = 2
 for i in range(n):
     x, y = train_set[i]
-    plot_image_channels(x, file="dump/images/x_{}.png".format(i))
+    #plot_image_channels(x, file="dump/images/x_{}.png".format(i))
+    plot_image_channels(x)
     x = x.to(device)
     outputs = vae(x[None,:,:,:])
     x_hat = outputs["x_hat"]
@@ -186,8 +186,8 @@ for i in range(n):
     
     x_reconstruction = x_hat
     x_reconstruction = x_reconstruction[0].detach()
-    plot_image_channels(x_reconstruction.cpu(), file="dump/images/x_reconstruction_{}.png".format(i))
-    #plot_image_channels(x_reconstruction.cpu())
+    #plot_image_channels(x_reconstruction.cpu(), file="dump/images/x_reconstruction_{}.png".format(i))
+    plot_image_channels(x_reconstruction.cpu())
 
 cprint("saved images", logfile)
 cprint("script done.", logfile)
