@@ -18,6 +18,9 @@ def LoadVAEmodel(folder, model_type=None):
         vae = CytoVariationalAutoencoder_nonvar(VAE_settings['image_shape'], VAE_settings['latent_features'])
     if model_type == 'basic':
         vae = VariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
+    if model_type == 'Conv_simon':
+        vae = ConvVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
+
     vae.load_state_dict(torch.load(folder + "vae_parameters.pt", map_location=torch.device('cpu')))
     return vae, validation_data, training_data, VAE_settings
 
@@ -51,6 +54,8 @@ def initVAEmodel(latent_features= 256,
         vae = CytoVariationalAutoencoder_nonvar(VAE_settings['image_shape'], VAE_settings['latent_features'])
     if model_type == 'basic':
         vae = VariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
+    if model_type == 'Conv_simon':
+        vae = ConvVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
     
     return vae, validation_performance, training_performance, VAE_settings
     

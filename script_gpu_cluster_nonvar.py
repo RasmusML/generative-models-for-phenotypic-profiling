@@ -70,7 +70,7 @@ cprint("VAE Configs", logfile)
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.0,
-                                                                    num_epochs = 500,
+                                                                    num_epochs = 10000,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 1e-3,
