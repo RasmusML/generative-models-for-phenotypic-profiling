@@ -48,7 +48,7 @@ class CytoVariationalAutoencoder(nn.Module):
             nn.Conv2d(in_channels=32, out_channels=2*256, kernel_size=5, padding=0),
             # Now we are at: 1h * 1w * 512ch
             nn.BatchNorm2d(2*256),
-            nn.Flatten(),
+            nn.Flatten()
         )
 
         
@@ -83,6 +83,7 @@ class CytoVariationalAutoencoder(nn.Module):
             nn.Conv2d(in_channels=32, out_channels=6, kernel_size=1, padding=0), # 6 channels because 3 for mean and 3 for variance
 #            nn.BatchNorm2d(6),
             nn.LeakyReLU(negative_slope=0.01)
+            #nn.Sigmoid()
         )
         
         # define the parameters of the prior, chosen as p(z) = N(0, I)

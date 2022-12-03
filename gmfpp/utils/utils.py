@@ -26,3 +26,14 @@ def constant_seed(seed: int = 0):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
+
+
+def StatusString(pretext = None, data=None, file=None):
+    if pretext == None:
+        outstring = ""
+    else: outstring = pretext + " \t| "
+    for key in data.keys():
+        outstring += "{}: {:.4f}, \t".format(key, np.mean(data[key]))
+    return outstring
+
+        #cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)

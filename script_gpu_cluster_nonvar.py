@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from gmfpp.utils.data_preparation import *
 from gmfpp.utils.data_transformers import *
-from gmfpp.utils.plotting_nonvar import *
+from gmfpp.utils.plotting import *
 
 from gmfpp.models.ReparameterizedDiagonalGaussian import *
 from gmfpp.models.CytoVariationalAutoencoder_nonvar import *
@@ -58,7 +58,7 @@ cprint("normalized images", logfile)
 
 metadata = shuffle_metadata(metadata)
 metadata_train, metadata_validation = split_metadata(metadata, split_fraction = .90)
-metadata_train, metadata_validation = metadata, metadata
+#metadata_train, metadata_validation = metadata, metadata
 
 train_set = SingleCellDataset(metadata_train, images, mapping)
 validation_set = SingleCellDataset(metadata_validation, images, mapping)
@@ -74,9 +74,10 @@ vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 1e-3,
-                                                                    image_shape = np.array([3, 68, 68]))
+                                                                    image_shape = np.array([3, 68, 68]),
+                                                                    model_type = "Cyto_nonvar"
+                                                                    )
 cprint("VAE_settings: {}".format(VAE_settings), logfile)
-vae = CytoVariationalAutoencoder_nonvar(VAE_settings['image_shape'], VAE_settings['latent_features'])
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
 
@@ -145,23 +146,26 @@ for epoch in range(num_epochs):
         #if impatience_level > max_patience:
         #    cprint("no more patience left at epoch {}".format(epoch), logfile)
         #    break
-    if epoch % print_every == 0:
-        cprint(f"epoch: {epoch}/{num_epochs}", logfile)  
-        cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
-        cprint("validation | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    
+        if epoch % print_every == 0:
+            cprint(f"epoch: {epoch}/{num_epochs}", logfile)
+            train_string = StatusString("training", training_epoch_data)
+            evalString = StatusString("evaluation", validation_data)
+            cprint(train_string, logfile)
+            cprint(evalString, logfile)
+            #cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
+            #cprint("validation | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    
 
 
 cprint("finished training", logfile)
 
 ######### Save VAE parameters #########
 cprint("Save VAE parameters", logfile)
-create_directory(output_folder + "parameters")
 
 datetime = get_datetime()
-torch.save(vae.state_dict(), output_folder + "parameters/vae_parameters_{}.pt".format(datetime))
-torch.save(validation_data, output_folder + "parameters/validation_data_{}.pt".format(datetime))
-torch.save(training_data, output_folder + "parameters/training_data_{}.pt".format(datetime))
-torch.save(VAE_settings, output_folder + "parameters/VAE_settings_{}.pt".format(datetime))
+torch.save(vae.state_dict(), output_folder + "vae_parameters.pt")
+torch.save(validation_data, output_folder + "validation_data.pt")
+torch.save(training_data, output_folder + "training_data.pt")
+torch.save(VAE_settings, output_folder + "VAE_settings.pt")
 
 ######### extract a few images already #########
 cprint("Extract a few images already", logfile)
@@ -169,8 +173,8 @@ create_directory(output_folder + "images")
 
 vae.eval() # because of batch normalization
 
-plot_VAE_performance(**training_data, file=output_folder + "images/training_data.png", title='VAE - learning')
-plot_VAE_performance(**validation_data, file=output_folder + "images/validation_data.png", title='VAE - validation')
+plot_VAE_performance(training_data, file=output_folder + "images/training_data.png", title='VAE - learning')
+plot_VAE_performance(validation_data, file=output_folder + "images/validation_data.png", title='VAE - validation')
 #plot_VAE_performance(training_data['elbo'], training_data['mse_loss'], training_data['kl'], title='VAE - learning')
 #plot_VAE_performance(**validation_data,title='VAE - validation')
 

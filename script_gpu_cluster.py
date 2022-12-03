@@ -28,10 +28,10 @@ from gmfpp.models.LoadModels import *
 ######### Utilities #########
 
 constant_seed()
-
 datetime = get_datetime()
-create_directory("dump/logs")
-logfile = create_logfile("./dump/logs/log_{}.log".format(datetime))
+output_folder = "dump/outputs_{}/".format(datetime)
+create_directory(output_folder)
+logfile = create_logfile(output_folder + "log.log")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 cprint(f"Using device: {device}", logfile)
@@ -39,11 +39,11 @@ cprint(f"Using device: {device}", logfile)
 
 ######### loading data #########
 
-path = get_server_directory_path()
-#path = "data/all/"
+#path = get_server_directory_path()
+path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-#metadata = metadata[:100]
+metadata = metadata[:2]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
@@ -70,11 +70,14 @@ cprint("VAE Configs", logfile)
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.,
-                                                                    num_epochs = 50,
+                                                                    num_epochs = 500,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 10e-4,
-                                                                    image_shape = np.array([3, 68, 68]))
+                                                                    image_shape = np.array([3, 68, 68]),
+                                                                    model_type = "Cyto"
+                                                                    )
+cprint("VAE_settings: {}".format(VAE_settings), logfile)
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
 
@@ -93,10 +96,9 @@ impatience_level = 0
 max_patience = 100
 
 best_elbo = np.finfo(np.float64).min
+print_every = 100
 
 for epoch in range(num_epochs):
-    cprint(f"epoch: {epoch}/{num_epochs}", logfile)
-    
     training_epoch_data = defaultdict(list)
     vae.train()
     
@@ -108,14 +110,12 @@ for epoch in range(num_epochs):
         
         optimizer.zero_grad()
         loss.backward()
-        nn.utils.clip_grad_norm_(vae.parameters(), 10_000)
+        nn.utils.clip_grad_norm_(vae.parameters(), 1)
         optimizer.step()
         
         for k, v in diagnostics.items():
             training_epoch_data[k] += [v.mean().item()]
-    
-    cprint("training | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["log_px"]), np.mean(training_epoch_data["kl"])), logfile)
-    
+        
     for k, v in training_epoch_data.items():
         training_data[k] += [np.mean(training_epoch_data[k])]
     
@@ -142,38 +142,43 @@ for epoch in range(num_epochs):
             impatience_level = 0
             best_elbo = current_elbo
         
-        if impatience_level > max_patience:
-            cprint("no more patience left at epoch {}".format(epoch), logfile)
-            break
+        #if impatience_level > max_patience:
+        #    cprint("no more patience left at epoch {}".format(epoch), logfile)
+        #    break
     
-    cprint("validation | elbo: {:2f}, log_px: {:.2f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["log_px"]), np.mean(validation_data["kl"])), logfile)    
-    
+        if epoch % print_every == 0:
+            cprint(f"epoch: {epoch}/{num_epochs}", logfile)
+            train_string = StatusString("training", training_epoch_data)
+            evalString = StatusString("evaluation", validation_data)
+            cprint(train_string, logfile)
+            cprint(evalString, logfile)
+
 
 cprint("finished training", logfile)
 
 ######### Save VAE parameters #########
 cprint("Save VAE parameters", logfile)
-create_directory("dump/parameters")
 
 datetime = get_datetime()
-torch.save(vae.state_dict(), "dump/parameters/vae_parameters_{}.pt".format(datetime))
-torch.save(validation_data, "dump/parameters/validation_data_{}.pt".format(datetime))
-torch.save(training_data, "dump/parameters/training_data_{}.pt".format(datetime))
-torch.save(VAE_settings, "dump/parameters/VAE_settings_{}.pt".format(datetime))
+torch.save(vae.state_dict(), output_folder + "vae_parameters.pt")
+torch.save(validation_data, output_folder + "validation_data.pt")
+torch.save(training_data, output_folder + "training_data.pt")
+torch.save(VAE_settings, output_folder + "VAE_settings.pt")
 
 ######### extract a few images already #########
 cprint("Extract a few images already", logfile)
-create_directory("dump/images")
+create_directory(output_folder + "images")
 
 vae.eval() # because of batch normalization
 
-plot_VAE_performance(**training_data, file='dump/images/training_data.png', title='VAE - learning')
-plot_VAE_performance(**validation_data, file='dump/images/validation_data.png', title='VAE - validation')
-
-n = 10
+plot_VAE_performance(training_data, file=output_folder + "images/training_data.png", title='VAE - learning')
+plot_VAE_performance(validation_data, file=output_folder + "images/validation_data.png", title='VAE - validation')
+#
+n = 2
 for i in range(n):
     x, y = train_set[i]
-    plot_image_channels(x, file="dump/images/x_{}.png".format(i))
+    plot_image_channels(x, file=output_folder + "images/x_{}.png".format(i))
+    #plot_image_channels(x)
     x = x.to(device)
     outputs = vae(x[None,:,:,:])
     px = outputs["px"]
@@ -181,12 +186,9 @@ for i in range(n):
     
     x_reconstruction = px.sample()
     x_reconstruction = x_reconstruction[0]
-    plot_image_channels(x_reconstruction.cpu(), file="dump/images/x_reconstruction_{}.png".format(i))
+    plot_image_channels(x_reconstruction.cpu(), file=output_folder + "images/x_reconstruction_{}.png".format(i))
+    #plot_image_channels(x_reconstruction.cpu())
     
 
 cprint("saved images", logfile)
 cprint("script done.", logfile)
-
-
-
-plot_control_vs_target_cells(vae=vae, validation_data=validation_data, training_data=training_data, VAE_settings=VAE_settings, val_set_obs_1=0, val_set_obs_2=1)
