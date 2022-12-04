@@ -8,7 +8,7 @@ from typing import List, Set, Dict, Tuple, Optional, Any
 def ReparameterizedSpikeAndSlab_sample(mu, log_sigma, log_gamma):
     eps = torch.empty_like(log_sigma.exp()).normal_()
     eta = torch.empty_like(log_sigma.exp()).normal_()
-    selector = nn.functional.sigmoid(log_gamma.exp() + eta -1)    
+    selector = torch.sigmoid(log_gamma.exp() + eta -1)    
     return selector * (mu + eps.mul(log_sigma.exp()))
 
 class SparseVariationalAutoencoder(nn.Module):

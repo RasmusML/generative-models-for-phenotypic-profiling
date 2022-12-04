@@ -7,7 +7,7 @@ import torch.nn as nn
 from gmfpp.utils.data_transformers import view_as_image_plot_format, clip_image_to_zero_one
 
 def img_saturate(img):
-    return img / torch.max(img)
+    return img / img.max()
 
 def plot_image(image: torch.Tensor, clip: bool = True, file=None, title=None):
     image = image.clone()

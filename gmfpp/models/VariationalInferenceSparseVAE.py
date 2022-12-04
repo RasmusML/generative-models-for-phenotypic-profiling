@@ -9,7 +9,7 @@ class VariationalInferenceSparseVAE(nn.Module):
     def __init__(self, beta:float=1., alplha:float=0.5):
         super().__init__()
         self.beta = beta
-        self.alpha = torch.Tensor([alplha])
+        self.alpha = alplha
     def forward(self, model:nn.Module, x:Tensor) -> Tuple[Tensor, Dict]:
         outputs = model(x)
 
