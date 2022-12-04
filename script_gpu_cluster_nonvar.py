@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader, Dataset
 from gmfpp.utils.data_preparation import *
 from gmfpp.utils.data_transformers import *
 from gmfpp.utils.plotting import *
+from gmfpp.utils.training import *
 
 from gmfpp.models.ReparameterizedDiagonalGaussian import *
 from gmfpp.models.CytoVariationalAutoencoder_nonvar import *
@@ -40,7 +41,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 cprint(f"Using device: {device}", logfile)
 
 
-######### loading data #########
+#######
+# ## loading data #########
 
 #path = get_server_directory_path()
 path = "data/all/"
@@ -73,7 +75,7 @@ cprint("VAE Configs", logfile)
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.0,
-                                                                    num_epochs = 3000,
+                                                                    num_epochs = 10,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 1e-3,
@@ -88,6 +90,8 @@ vi = VariationalInferenceSparseVAE(beta=VAE_settings['beta'])
 
 train_loader = DataLoader(train_set, batch_size=VAE_settings['batch_size'], shuffle=True, num_workers=0, drop_last=True)
 validation_loader = DataLoader(validation_set, batch_size=VAE_settings['batch_size'], shuffle=False, num_workers=0, drop_last=False)
+train_batcher = TreatmentBalancedBatchGenerator(images, metadata_train)
+
 
 ######### VAE Training #########
 cprint("VAE Training", logfile)
@@ -95,7 +99,7 @@ cprint("VAE Training", logfile)
 num_epochs = VAE_settings['num_epochs']
 batch_size = VAE_settings['batch_size']
 
-print_every = 100
+print_every = 1
 impatience_level = 0
 max_patience = 100
 
