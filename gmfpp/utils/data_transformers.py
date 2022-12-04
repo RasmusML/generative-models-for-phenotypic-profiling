@@ -48,7 +48,6 @@ def normalize_channels_by_max_inplace(data: torch.Tensor):
     """
     data /= 40_000
     
- 
 def img_saturate(img: torch.Tensor) -> torch.Tensor:
     return img / torch.max(img)
 

@@ -2,6 +2,7 @@ from typing import List, Set, Dict, Tuple, Optional, Any
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import torch.nn as nn
 
 from gmfpp.utils.data_transformers import view_as_image_plot_format, clip_image_to_zero_one
 
@@ -62,7 +63,6 @@ def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool 
 
     plt.close()
 
- 
 def plot_VAE_performance(plotdata, file=None, title=None):
     keys = plotdata.keys()
     fig, axs = plt.subplots(1, len(keys), figsize=(14,6), constrained_layout = True)
@@ -84,8 +84,9 @@ def plot_VAE_performance(plotdata, file=None, title=None):
 def plot_cosine_similarity(x0, x1, model, file=None, title=None):
     #model could be eg. "model_dump/outputs_2022-12-04 - 12-20-15/"
     #x0.shape and x1.shape should be torch.Size([3, 68, 68])
-    vae, validation_data, training_data, VAE_settings = LoadVAEmodel(model)
-
+    
+    #vae, validation_data, training_data, VAE_settings = LoadVAEmodel(model)
+    vae = model
     outputs0 = vae(x0[None,:,:,:])
     outputs1 = vae(x1[None,:,:,:])
 
@@ -98,8 +99,8 @@ def plot_cosine_similarity(x0, x1, model, file=None, title=None):
 
     cp = []
     for i in range(len(zs)):
-        input1 = vae.observation(zs[i])[0]
-        benchmark = vae.observation(zs[9])[0]
+        input1 = vae.observation(torch.Tensor(zs[i]))[0]
+        benchmark = vae.observation(torch.Tensor(zs[9]))[0]
         cp.append(cos(input1, benchmark).mean().detach().numpy().round(2))
 
     # create figure
@@ -112,10 +113,14 @@ def plot_cosine_similarity(x0, x1, model, file=None, title=None):
     # Adds a subplot at the 1st position
     for i in range(columns):
         fig.add_subplot(rows, columns, i+1)
-        plt.imshow((torch.permute(vae.observation(zs[i])[0], (1, 2, 0))* 255).detach().numpy().astype(np.uint8))
+        plt.imshow((torch.permute(vae.observation(torch.Tensor(zs[i]))[0], (1, 2, 0))* 255).detach().numpy().astype(np.uint8))
         plt.axis('off')
-        plt.title(cp[i])
-
+        if i == 0:
+            plt.title('Control', y=-0.20)
+        elif i == len(zs)-1:
+            plt.title('Target', y=-0.20)
+        else:
+            plt.title(cp[i])
     if file == None:
         plt.show()
     else: 
