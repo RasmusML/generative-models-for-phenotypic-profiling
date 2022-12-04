@@ -21,23 +21,70 @@ class SparseVariationalAutoencoder(nn.Module):
         
         self.latent_features = latent_features
         self.observation_features = np.prod(input_shape)
+        self.input_channels = input_shape[0]
 
         self.encoder = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features=self.observation_features, out_features=256),
-            nn.ReLU(),
-            nn.Linear(in_features=256, out_features=128),
-            nn.ReLU(),
-            nn.Linear(in_features=128, out_features=3*latent_features)
+            # now we are at 68h * 68w * 3ch
+            nn.Conv2d(in_channels=self.input_channels, out_channels=32, kernel_size=5, padding=0),
+            # Now we are at: 64h * 64w * 32ch
+            nn.MaxPool2d(2),
+            nn.LeakyReLU(negative_slope=0.01),
+            nn.BatchNorm2d(32),
+
+            # Now we are at: 32h * 32w * 32ch
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, padding=0),
+            # Now we are at: 28h * 28w * 32ch
+            nn.MaxPool2d(2),
+            # Now we are at: 14h * 14w * 32ch
+            nn.LeakyReLU(negative_slope=0.01),
+            nn.BatchNorm2d(32),
+
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, padding=0),
+            # Now we are at: 10h * 10w * 32ch
+            nn.MaxPool2d(2),
+            # Now we are at: 5h * 5w * 32ch
+            nn.LeakyReLU(negative_slope=0.01),
+            nn.BatchNorm2d(32),
+
+            ##Output should be 5*5*32 now.
+            nn.Conv2d(in_channels=32, out_channels=3*latent_features, kernel_size=5, padding=0),
+            # Now we are at: 1h * 1w * 512ch
+            nn.BatchNorm2d(3*latent_features),
+            nn.Flatten()
         )
+
         
+        # Generative Model
+        # Decode the latent sample `z` into the parameters of the observation model
+        # `p_\theta(x | z) = \prod_i B(x_i | g_\theta(x))`
         self.decoder = nn.Sequential(
-            nn.Linear(in_features=latent_features, out_features=128),
-            nn.ReLU(),
-            nn.Linear(in_features=128, out_features=256),
-            nn.ReLU(),
-            nn.Linear(in_features=256, out_features=1*self.observation_features),
-            nn.Unflatten(1,self.input_shape)
+            nn.Unflatten(1, (256,1,1)), # Now we are at: 1h * 1w * 256ch
+            nn.Conv2d(in_channels=256, out_channels=32, kernel_size=5, padding=4),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(negative_slope=0.01),
+            torch.nn.UpsamplingNearest2d(size=10),
+
+            # Now we are at: 10h * 10w * 32ch
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, padding=4),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(negative_slope=0.01),
+            torch.nn.UpsamplingNearest2d(size=28),
+
+            # Now we are at: 28h * 28w * 32ch
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, padding=4),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(negative_slope=0.01),
+            torch.nn.UpsamplingNearest2d(size=64),
+
+            # Now we are at: 64h * 64w * 32ch
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, padding=4),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(negative_slope=0.01),
+            
+            # Now we are at: 68h * 68w * 32ch
+            nn.Conv2d(in_channels=32, out_channels=3, kernel_size=1, padding=0), # 6 channels because 3 for mean and 3 for variance
+#            nn.BatchNorm2d(6),
+            nn.LeakyReLU(negative_slope=0.01)
         )
         self.register_buffer('prior_params', torch.zeros(torch.Size([1, 2*latent_features])))
         #print("Init SVAE end")
@@ -54,9 +101,9 @@ class SparseVariationalAutoencoder(nn.Module):
         h_z = self.encoder(x)
         qz_mu, qz_log_sigma, qz_log_gamma = h_z.chunk(3, dim=-1)
 
-        #print("mu.shape", mu.shape) # should be dim batch, x, y, channel
-        #print("log_sigma.shape", log_sigma.shape) # should be dim batch, x, y, channel
-        #print("log_gamma.shape", log_gamma.shape) # should be dim batch, x, y, channel, #latentvar
+        #print("qz_mu.shape", qz_mu.shape) # should be dim batch, x, y, channel
+        #print("qz_log_sigma.shape", qz_log_sigma.shape) # should be dim batch, x, y, channel
+        #print("qz_log_gamma.shape", qz_log_gamma.shape) # should be dim batch, x, y, channel, #latentvar
         z = ReparameterizedSpikeAndSlab_sample(qz_mu, qz_log_sigma, qz_log_gamma)
         x_hat = self.observation(z)
         #print("x_hat.shape", x_hat.shape) 

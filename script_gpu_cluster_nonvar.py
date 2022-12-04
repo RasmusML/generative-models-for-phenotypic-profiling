@@ -46,14 +46,14 @@ cprint(f"Using device: {device}", logfile)
 path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:100]
+metadata = metadata[:10]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
 relative_paths = get_relative_image_paths(metadata)
 image_paths = [path + relative for relative in relative_paths]
 images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
-#images = torch.load("dump/all_data.pt")
+#images = torch.load("images.pt")
 mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
 normalize_every_image_channels_seperately_inplace(images)
