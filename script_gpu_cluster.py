@@ -167,7 +167,7 @@ torch.save(VAE_settings, output_folder + "VAE_settings.pt")
 
 ######### extract a few images already #########
 cprint("Extract a few images already", logfile)
-create_directory(output_folder + "images")
+create_directory("dump/images")
 
 vae.eval() # because of batch normalization
 

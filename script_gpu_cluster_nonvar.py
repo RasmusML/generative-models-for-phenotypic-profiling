@@ -20,8 +20,10 @@ from gmfpp.utils.plotting import *
 from gmfpp.models.ReparameterizedDiagonalGaussian import *
 from gmfpp.models.CytoVariationalAutoencoder_nonvar import *
 from gmfpp.models.VariationalAutoencoder import *
+from gmfpp.models.SparseVariationalAutoencoder import SparseVariationalAutoencoder
 from gmfpp.models.ConvVariationalAutoencoder import *
 from gmfpp.models.VariationalInference_nonvar import *
+from gmfpp.models.VariationalInferenceSparseVAE import VariationalInferenceSparseVAE
 from gmfpp.utils.utils import *
 from gmfpp.models.LoadModels import *
 
@@ -32,6 +34,7 @@ datetime = get_datetime()
 output_folder = "dump/outputs_{}/".format(datetime)
 create_directory(output_folder)
 logfile = create_logfile(output_folder + "log.log")
+cprint("output_folder is: {}".format(output_folder), logfile)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 cprint(f"Using device: {device}", logfile)
@@ -40,17 +43,17 @@ cprint(f"Using device: {device}", logfile)
 ######### loading data #########
 
 #path = get_server_directory_path()
-path = "data/two_from_each_compound/"
+path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:2]
+metadata = metadata[:100]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
 relative_paths = get_relative_image_paths(metadata)
 image_paths = [path + relative for relative in relative_paths]
 images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
-#images = torch.load("images.pt")
+#images = torch.load("dump/all_data.pt")
 mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
 normalize_every_image_channels_seperately_inplace(images)
@@ -70,18 +73,18 @@ cprint("VAE Configs", logfile)
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
                                                                     beta = 1.0,
-                                                                    num_epochs = 10000,
+                                                                    num_epochs = 3000,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 1e-3,
                                                                     image_shape = np.array([3, 68, 68]),
-                                                                    model_type = "Cyto_nonvar"
+                                                                    model_type = "SparseVAE"
                                                                     )
 cprint("VAE_settings: {}".format(VAE_settings), logfile)
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
 
-vi = VariationalInference_nonvar(beta=VAE_settings['beta'])
+vi = VariationalInferenceSparseVAE(beta=VAE_settings['beta'])
 
 train_loader = DataLoader(train_set, batch_size=VAE_settings['batch_size'], shuffle=True, num_workers=0, drop_last=True)
 validation_loader = DataLoader(validation_set, batch_size=VAE_settings['batch_size'], shuffle=False, num_workers=0, drop_last=False)
@@ -175,10 +178,8 @@ vae.eval() # because of batch normalization
 
 plot_VAE_performance(training_data, file=output_folder + "images/training_data.png", title='VAE - learning')
 plot_VAE_performance(validation_data, file=output_folder + "images/validation_data.png", title='VAE - validation')
-#plot_VAE_performance(training_data['elbo'], training_data['mse_loss'], training_data['kl'], title='VAE - learning')
-#plot_VAE_performance(**validation_data,title='VAE - validation')
 
-n = 2
+n = 10
 for i in range(n):
     x, y = train_set[i]
     plot_image_channels(x, file=output_folder + "images/x_{}.png".format(i))
@@ -194,5 +195,6 @@ for i in range(n):
     #plot_image_channels(x_reconstruction.cpu())
 
 cprint("saved images", logfile)
+cprint("output_folder is: {}".format(output_folder), logfile)
 cprint("script done.", logfile)
 

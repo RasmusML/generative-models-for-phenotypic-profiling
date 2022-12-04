@@ -6,6 +6,7 @@ from gmfpp.models.CytoVariationalAutoencoder import CytoVariationalAutoencoder
 from gmfpp.models.CytoVariationalAutoencoder_nonvar import CytoVariationalAutoencoder_nonvar
 from gmfpp.models.VariationalAutoencoder import VariationalAutoencoder
 from gmfpp.models.ConvVariationalAutoencoder import ConvVariationalAutoencoder
+from gmfpp.models.SparseVariationalAutoencoder import SparseVariationalAutoencoder
 
 def LoadVAEmodel(folder, model_type=None):
     validation_data = torch.load(folder + "validation_data.pt", map_location=torch.device('cpu'))
@@ -20,7 +21,9 @@ def LoadVAEmodel(folder, model_type=None):
         vae = VariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
     if model_type == 'Conv_simon':
         vae = ConvVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
-
+    if model_type == 'SparseVAE':
+        vae = SparseVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
+    
     vae.load_state_dict(torch.load(folder + "vae_parameters.pt", map_location=torch.device('cpu')))
     return vae, validation_data, training_data, VAE_settings
 
@@ -56,7 +59,7 @@ def initVAEmodel(latent_features= 256,
         vae = VariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
     if model_type == 'Conv_simon':
         vae = ConvVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
+    if model_type == 'SparseVAE':
+        vae = SparseVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
     
     return vae, validation_performance, training_performance, VAE_settings
-    
-    

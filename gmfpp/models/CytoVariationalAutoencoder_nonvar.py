@@ -97,8 +97,8 @@ class CytoVariationalAutoencoder_nonvar(nn.Module):
     def forward(self, x) -> Dict[str, Any]:
         """compute the posterior q(z|x) (encoder), sample z~q(z|x) and return the distribution p(x|z) (decoder)"""
         
-        h_x = self.encoder(x)
-        qz_mu, qz_log_sigma =  h_x.chunk(2, dim=-1)        
+        h_z = self.encoder(x)
+        qz_mu, qz_log_sigma =  h_z.chunk(2, dim=-1)        
         eps = torch.empty_like(qz_mu).normal_()
         z = qz_mu + qz_log_sigma.exp() * eps
         
