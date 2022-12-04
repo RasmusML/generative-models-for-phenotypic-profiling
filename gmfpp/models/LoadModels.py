@@ -8,11 +8,11 @@ from gmfpp.models.VariationalAutoencoder import VariationalAutoencoder
 from gmfpp.models.ConvVariationalAutoencoder import ConvVariationalAutoencoder
 from gmfpp.models.SparseVariationalAutoencoder import SparseVariationalAutoencoder
 
-def LoadVAEmodel(folder, model_type=None):
-    validation_data = torch.load(folder + "validation_data.pt", map_location=torch.device('cpu'))
-    training_data = torch.load(folder + "training_data.pt", map_location=torch.device('cpu'))
-    VAE_settings = torch.load(folder + "VAE_settings.pt", map_location=torch.device('cpu'))
-    if "model_type" in VAE_settings.keys(): model_type = VAE_settings[model_type]
+def LoadVAEmodel(folder, model_type=None, device="cpu"):
+    validation_data = torch.load(folder + "validation_data.pt", map_location=torch.device(device))
+    training_data = torch.load(folder + "training_data.pt", map_location=torch.device(device))
+    VAE_settings = torch.load(folder + "VAE_settings.pt", map_location=torch.device(device))
+    if "model_type" in VAE_settings.keys(): model_type = VAE_settings['model_type']
     if (model_type == None) or model_type == "Cyto":
         vae = CytoVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
     if model_type == 'Cyto_nonvar':
@@ -24,7 +24,7 @@ def LoadVAEmodel(folder, model_type=None):
     if model_type == 'SparseVAE':
         vae = SparseVariationalAutoencoder(VAE_settings['image_shape'], VAE_settings['latent_features'])
     
-    vae.load_state_dict(torch.load(folder + "vae_parameters.pt", map_location=torch.device('cpu')))
+    vae.load_state_dict(torch.load(folder + "vae_parameters.pt", map_location=torch.device(device)))
     return vae, validation_data, training_data, VAE_settings
 
 
