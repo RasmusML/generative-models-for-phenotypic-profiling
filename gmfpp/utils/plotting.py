@@ -116,11 +116,11 @@ def plot_cosine_similarity(x0, x1, model, file=None, title=None):
         plt.imshow((torch.permute(vae.observation(torch.Tensor(zs[i]))[0], (1, 2, 0))* 255).detach().numpy().astype(np.uint8))
         plt.axis('off')
         if i == 0:
-            plt.title('Control', y=-0.20)
+            plt.title('Control', y=-0.20, fontsize=26)
         elif i == len(zs)-1:
-            plt.title('Target', y=-0.20)
+            plt.title('Target', y=-0.20, fontsize=26)
         else:
-            plt.title(cp[i])
+            plt.title(cp[i], fontsize=26)
     if file == None:
         plt.show()
     else: 
