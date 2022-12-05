@@ -1,9 +1,10 @@
 import pandas as pd
+import numpy as np
 
 # extracting latent variables for each image/cell
 def LatentVariableExtraction(metadata, images, batch_size, vae):
     images.shape[0]
-    batch_size=batch_size
+    batch_size=min(batch_size, len(images))
     batch_offset = np.arange(start=0, stop=images.shape[0]+1, step=batch_size)
 
     df = pd.DataFrame()
@@ -15,41 +16,64 @@ def LatentVariableExtraction(metadata, images, batch_size, vae):
 
         outputs = vae(images[start:end,:,:,:])
         z = outputs["z"]
-        z_df = pd.DataFrame(z.detach().numpy())
+        columns_list = ["latent_"+str(z) for z in range(z.shape[1])]
+        z_df = pd.DataFrame(z.detach().numpy(), columns=columns_list)
         z_df.index = list(range(start,end))
         df = pd.concat([metadata.iloc[start:end], z_df], axis=1)
         new_metadata = pd.concat([new_metadata, df], axis=0)
-
+        print("Profiling {}/{} batches of size {}".format(j, len(batch_offset)-1, batch_size))
     return new_metadata
 
   # Wells Profiles
 def well_profiles(nm):
-    wa = nm.groupby('Image_Metadata_Well_DAPI').mean().iloc[:,-256:]
+    latent_cols = [col for col in nm.columns if type(col)==str and col[0:7]=='latent_']
+    wa = nm.groupby('Image_Metadata_Well_DAPI').mean()[latent_cols]
     return wa
 
 # function to get the cell closest to each Well profile
-
 def well_center_cells(df,well_profiles,p=2):
     wcc = []
+    latent_cols = [col for col in df.columns if type(col)==str and col[0:7]=='latent_']
     for w in well_profiles.index:
-        diffs = (abs(df[df['Image_Metadata_Well_DAPI'] == w].iloc[:,11:] - well_profiles.loc[w])**p)
+        diffs = (abs(df[df['Image_Metadata_Well_DAPI'] == w][latent_cols] - well_profiles.loc[w])**p)
         diffs_sum = diffs.sum(axis=1)**(1/p)
         diffs_min = diffs_sum.min()
         wcc.append(diffs[diffs_sum == diffs_min].index[0])
-    
     return wcc
+
+# Treatment Profiles
+def treatment_profiles(nm):
+    latent_cols = [col for col in nm.columns if type(col)==str and col[0:7]=='latent_']
+    mean_over_treatment_well_unique = nm.groupby(['Treatment', 'Image_Metadata_Compound', 'Image_Metadata_Concentration','Well_unique', 'moa'], as_index=False).mean()
+    median_over_treatment = mean_over_treatment_well_unique.groupby(['Treatment', 'Image_Metadata_Compound', 'Image_Metadata_Concentration', 'moa'], as_index=False).median()
+    return median_over_treatment
+
+# function to get the cell closest to each Treatment profile
+def treatment_center_cells(df,treatment_profiles,p=2):
+    tcc = []
+    latent_cols = [col for col in df.columns if type(col)==str and col[0:7]=='latent_']
+    for t in treatment_profiles.index:
+        diffs = (abs(df[df['Treatment'] == t][latent_cols] - treatment_profiles.loc[t])**p)
+        diffs_sum = diffs.sum(axis=1)**(1/p)
+        diffs_min = diffs_sum.min()
+        tcc.append(diffs[diffs_sum == diffs_min].index[0])
+    
+    return tcc
+
 
 # Compount/Concentration Profiles
 def CC_Profile(nm):
-    cc =  nm.groupby(['Image_Metadata_Compound','Image_Metadata_Concentration']).median().iloc[:,-256:]
+    latent_cols = [col for col in df.columns if type(col)==str and col[0:7]=='latent_']
+    cc =  nm.groupby(['Image_Metadata_Compound','Image_Metadata_Concentration']).median()[latent_cols]
     return cc
 
 # function to get the cell closest to each Compound/Concentration profile
 
 def cc_center_cells(df,cc_profiles,p=2):
     cc_center_cells = []
+    latent_cols = [col for col in df.columns if type(col)==str and col[0:7]=='latent_']
     for cc in cc_profiles.index:
-        diffs = (abs(df[(df['Image_Metadata_Compound'] == cc[0]) & (nm['Image_Metadata_Concentration'] == cc[1])].iloc[:,-256:] - cc_profiles.loc[cc]))**p
+        diffs = (abs(df[(df['Image_Metadata_Compound'] == cc[0]) & (df['Image_Metadata_Concentration'] == cc[1])][latent_cols] - cc_profiles.loc[cc]))**p
         diffs_sum = diffs.sum(axis=1)**(1/p)
         diffs_min = diffs_sum.min()
         cc_center_cells.append(diffs[diffs_sum == diffs_min].index[0])
