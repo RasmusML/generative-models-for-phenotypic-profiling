@@ -98,8 +98,8 @@ cprint("beta_increase:{} ".format(beta_increase), logfile)
 vi = VariationalInference_nonvar(beta=VAE_settings['beta'])
 
 train_loader = DataLoader(train_set, batch_size=VAE_settings['batch_size'], shuffle=True, num_workers=0, drop_last=True)
-validation_loader = DataLoader(validation_set, batch_size=max(min(len(validation_set), 1024*64), VAE_settings['batch_size']), shuffle=False, num_workers=0, drop_last=False)
-train_batcher = TreatmentBalancedBatchGenerator(images, metadata_train)
+validation_loader = DataLoader(validation_set, batch_size=VAE_settings['batch_size'], shuffle=False, num_workers=0, drop_last=False)
+#train_batcher = TreatmentBalancedBatchGenerator(images, metadata_train)
 
 
 ######### VAE Training #########
