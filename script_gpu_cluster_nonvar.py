@@ -44,18 +44,18 @@ cprint(f"Using device: {device}", logfile)
 #######
 # ## loading data #########
 
-#path = get_server_directory_path()
-path = "data/all/"
+path = get_server_directory_path()
+#path = "data/all/"
 
 metadata = read_metadata(path + "metadata.csv")
-metadata = metadata[:10]
+#metadata = metadata[:10]
 cprint("loaded metadata",logfile)
 
 cprint("loading images", logfile)
 relative_paths = get_relative_image_paths(metadata)
 image_paths = [path + relative for relative in relative_paths]
-images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
-#images = torch.load("images.pt")
+#images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile)
+images = torch.load("images.pt")
 mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
 normalize_every_image_channels_seperately_inplace(images)
@@ -74,7 +74,7 @@ cprint("VAE Configs", logfile)
 
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 1024,
-                                                                    beta = 1.0,
+                                                                    beta = 0,
                                                                     num_epochs = 1000,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
@@ -89,10 +89,10 @@ optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'],
 alpha = 0.01
 alpha_max = 0.2
 alpha_increase = (alpha_max-alpha) / VAE_settings['num_epochs']
-print("alpha_increase", alpha_increase)
+cprint("alpha_increase:{} ".format(alpha_increase), logfile)
 beta_max = 10
 beta_increase = (beta_max - VAE_settings['beta']) / VAE_settings['num_epochs']
-print("beta_increase", beta_increase)
+cprint("beta_increase:{} ".format(beta_increase), logfile)
 
 vi = VariationalInferenceSparseVAE(beta=VAE_settings['beta'], beta_increase=beta_increase, alpha=alpha, alpha_increase=alpha_increase, alpha_max=alpha_max)
 
@@ -166,8 +166,8 @@ for epoch in range(num_epochs):
             evalString = StatusString("evaluation", validation_data)
             cprint(train_string, logfile)
             cprint(evalString, logfile)
-            print("vi.beta", vi.beta)
-            print("vi.alpha", vi.alpha)        
+            cprint("vi.beta: {}".format(vi.beta), logfile)
+            cprint("vi.alpha: {}".format(vi.alpha), logfile)        
 
             #cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
             #cprint("validation | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    
