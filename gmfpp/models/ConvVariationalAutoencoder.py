@@ -7,6 +7,9 @@ from typing import List, Set, Dict, Tuple, Optional, Any
 
 
 class ConvVariationalAutoencoder(nn.Module):
+    def update_(self):
+        pass
+    
    
     def __init__(self, input_shape, latent_features:int) -> None:
         super(ConvVariationalAutoencoder, self).__init__()

@@ -14,7 +14,10 @@ class VariationalInference_nonvar(nn.Module):
     def __init__(self, beta:float=1.):
         super().__init__()
         self.beta = beta
-        
+
+    def update_(self):
+        pass
+            
     def forward(self, model:nn.Module, x:Tensor) -> Tuple[Tensor, Dict]:
         outputs = model(x)
 

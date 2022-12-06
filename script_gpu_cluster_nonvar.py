@@ -73,9 +73,9 @@ validation_set = SingleCellDataset(metadata_validation, images, mapping)
 cprint("VAE Configs", logfile)
 
 # start another training session
-vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
+vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 1024,
                                                                     beta = 1.0,
-                                                                    num_epochs = 10,
+                                                                    num_epochs = 1000,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 1e-3,
@@ -86,7 +86,15 @@ cprint("VAE_settings: {}".format(VAE_settings), logfile)
 vae = vae.to(device)
 optimizer = torch.optim.Adam(vae.parameters(), lr=VAE_settings['learning_rate'], weight_decay=VAE_settings['weight_decay'])
 
-vi = VariationalInferenceSparseVAE(beta=VAE_settings['beta'])
+alpha = 0.01
+alpha_max = 0.2
+alpha_increase = (alpha_max-alpha) / VAE_settings['num_epochs']
+print("alpha_increase", alpha_increase)
+beta_max = 10
+beta_increase = (beta_max - VAE_settings['beta']) / VAE_settings['num_epochs']
+print("beta_increase", beta_increase)
+
+vi = VariationalInferenceSparseVAE(beta=VAE_settings['beta'], beta_increase=beta_increase, alpha=alpha, alpha_increase=alpha_increase, alpha_max=alpha_max)
 
 train_loader = DataLoader(train_set, batch_size=VAE_settings['batch_size'], shuffle=True, num_workers=0, drop_last=True)
 validation_loader = DataLoader(validation_set, batch_size=VAE_settings['batch_size'], shuffle=False, num_workers=0, drop_last=False)
@@ -99,7 +107,7 @@ cprint("VAE Training", logfile)
 num_epochs = VAE_settings['num_epochs']
 batch_size = VAE_settings['batch_size']
 
-print_every = 1
+print_every = 100
 impatience_level = 0
 max_patience = 100
 
@@ -114,15 +122,14 @@ for epoch in range(num_epochs):
         x = x.to(device)
         # perform a forward pass through the model and compute the ELBO
         loss, diagnostics, outputs = vi(vae, x)
-        
         optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(vae.parameters(), 10_000)
         optimizer.step()
-        
         for k, v in diagnostics.items():
             training_epoch_data[k] += [v.mean().item()]
-    
+    vae.update_()
+    vi.update_vi()
     
     for k, v in training_epoch_data.items():
         training_data[k] += [np.mean(training_epoch_data[k])]
@@ -159,6 +166,9 @@ for epoch in range(num_epochs):
             evalString = StatusString("evaluation", validation_data)
             cprint(train_string, logfile)
             cprint(evalString, logfile)
+            print("vi.beta", vi.beta)
+            print("vi.alpha", vi.alpha)        
+
             #cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
             #cprint("validation | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    
 
@@ -191,8 +201,6 @@ for i in range(n):
     x = x.to(device)
     outputs = vae(x[None,:,:,:])
     x_hat = outputs["x_hat"]
-    
-    
     x_reconstruction = x_hat
     x_reconstruction = x_reconstruction[0].detach()
     plot_image_channels(x_reconstruction.cpu(), file=output_folder + "images/x_reconstruction_{}.png".format(i))

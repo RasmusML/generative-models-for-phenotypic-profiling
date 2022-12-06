@@ -5,14 +5,15 @@ from torch.distributions import Distribution, Exponential, Cauchy, HalfCauchy, N
 from gmfpp.models.PrintSize import *
 from typing import List, Set, Dict, Tuple, Optional, Any
 
-def ReparameterizedSpikeAndSlab_sample(mu, log_sigma, log_gamma):
-    eps = torch.empty_like(log_sigma.exp()).normal_()
-    eta = torch.empty_like(log_sigma.exp()).normal_()
-    selector = torch.sigmoid(log_gamma.exp() + eta -1)    
-    return selector * (mu + eps.mul(log_sigma.exp()))
 
 class SparseVariationalAutoencoder(nn.Module):
-   
+    def ReparameterizedSpikeAndSlab_sample(self, mu, log_sigma, log_gamma):
+        eps = torch.empty_like(log_sigma.exp()).normal_()
+        eta = torch.empty_like(log_sigma.exp()).normal_()
+        selector = torch.sigmoid(log_gamma.exp() + eta -1)    
+        return selector * (mu + eps.mul(log_sigma.exp()))
+
+
     def __init__(self, input_shape, latent_features: int) -> None:
         super(SparseVariationalAutoencoder, self).__init__()
         #print("Init SVAE input_shape, latent_features: ", input_shape, latent_features)
@@ -22,6 +23,8 @@ class SparseVariationalAutoencoder(nn.Module):
         self.latent_features = latent_features
         self.observation_features = np.prod(input_shape)
         self.input_channels = input_shape[0]
+        self.serect_c = 50
+
 
         self.encoder = nn.Sequential(
             # now we are at 68h * 68w * 3ch
@@ -49,7 +52,7 @@ class SparseVariationalAutoencoder(nn.Module):
             ##Output should be 5*5*32 now.
             nn.Conv2d(in_channels=32, out_channels=3*latent_features, kernel_size=5, padding=0),
             # Now we are at: 1h * 1w * 512ch
-            nn.BatchNorm2d(3*latent_features),
+            nn.BatchNorm2d(3*self.latent_features ),
             nn.Flatten()
         )
 
@@ -58,8 +61,8 @@ class SparseVariationalAutoencoder(nn.Module):
         # Decode the latent sample `z` into the parameters of the observation model
         # `p_\theta(x | z) = \prod_i B(x_i | g_\theta(x))`
         self.decoder = nn.Sequential(
-            nn.Unflatten(1, (256,1,1)), # Now we are at: 1h * 1w * 256ch
-            nn.Conv2d(in_channels=256, out_channels=32, kernel_size=5, padding=4),
+            nn.Unflatten(1, (self.latent_features ,1,1)), # Now we are at: 1h * 1w * 256ch
+            nn.Conv2d(in_channels=self.latent_features , out_channels=32, kernel_size=5, padding=4),
             nn.BatchNorm2d(32),
             nn.LeakyReLU(negative_slope=0.01),
             torch.nn.UpsamplingNearest2d(size=10),
@@ -101,10 +104,7 @@ class SparseVariationalAutoencoder(nn.Module):
         h_z = self.encoder(x)
         qz_mu, qz_log_sigma, qz_log_gamma = h_z.chunk(3, dim=-1)
 
-        #print("qz_mu.shape", qz_mu.shape) # should be dim batch, x, y, channel
-        #print("qz_log_sigma.shape", qz_log_sigma.shape) # should be dim batch, x, y, channel
-        #print("qz_log_gamma.shape", qz_log_gamma.shape) # should be dim batch, x, y, channel, #latentvar
-        z = ReparameterizedSpikeAndSlab_sample(qz_mu, qz_log_sigma, qz_log_gamma)
+        z = self.ReparameterizedSpikeAndSlab_sample(qz_mu, qz_log_sigma, qz_log_gamma)
         x_hat = self.observation(z)
         #print("x_hat.shape", x_hat.shape) 
         
@@ -113,4 +113,9 @@ class SparseVariationalAutoencoder(nn.Module):
                 'qz_log_gamma': qz_log_gamma, 
                 'qz_mu': qz_mu, 
                 'qz_log_sigma':qz_log_sigma}
+
+    def update_(self):
+        self.serect_c += 1
+        
+
     

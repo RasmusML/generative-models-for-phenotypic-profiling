@@ -7,7 +7,10 @@ from typing import List, Set, Dict, Tuple, Optional, Any
 from gmfpp.models.ReparameterizedDiagonalGaussian import ReparameterizedDiagonalGaussian
 
 class CytoVariationalAutoencoder_nonvar(nn.Module):
-   
+ 
+    def update_(self):
+        pass
+  
     def __init__(self, input_shape, latent_features: int):
         super(CytoVariationalAutoencoder_nonvar, self).__init__()
         
