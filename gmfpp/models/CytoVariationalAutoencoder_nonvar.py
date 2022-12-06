@@ -51,7 +51,7 @@ class CytoVariationalAutoencoder_nonvar(nn.Module):
             nn.Conv2d(in_channels=32, out_channels=2*latent_features, kernel_size=5, padding=0),
             # Now we are at: 1h * 1w * 512ch
             nn.BatchNorm2d(2*self.latent_features),
-            nn.Flatten(),
+            nn.Flatten()
         )
 
         
