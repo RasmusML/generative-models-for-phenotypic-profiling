@@ -73,14 +73,14 @@ validation_set = SingleCellDataset(metadata_validation, images, mapping)
 cprint("VAE Configs", logfile)
 
 # start another training session
-vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 1024,
-                                                                    beta = 0,
+vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
+                                                                    beta = 1,
                                                                     num_epochs = 100,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
                                                                     weight_decay = 1e-3,
                                                                     image_shape = np.array([3, 68, 68]),
-                                                                    model_type = "SparseVAE"
+                                                                    model_type = "Cyto_nonvar"
                                                                     )
 cprint("VAE_settings: {}".format(VAE_settings), logfile)
 vae = vae.to(device)
@@ -94,7 +94,8 @@ beta_max = 2
 beta_increase = (beta_max - VAE_settings['beta']) / VAE_settings['num_epochs']
 cprint("beta_increase:{} ".format(beta_increase), logfile)
 
-vi = VariationalInferenceSparseVAE(beta=VAE_settings['beta'], beta_increase=beta_increase, alpha=alpha, alpha_increase=alpha_increase, alpha_max=alpha_max)
+#vi = VariationalInferenceSparseVAE(beta=VAE_settings['beta'], beta_increase=beta_increase, alpha=alpha, alpha_increase=alpha_increase, alpha_max=alpha_max)
+vi = VariationalInference_nonvar(beta=VAE_settings['beta'])
 
 train_loader = DataLoader(train_set, batch_size=VAE_settings['batch_size'], shuffle=True, num_workers=0, drop_last=True)
 validation_loader = DataLoader(validation_set, batch_size=max(len(validation_set), VAE_settings['batch_size']), shuffle=False, num_workers=0, drop_last=False)
@@ -164,8 +165,8 @@ for epoch in range(num_epochs):
             evalString = StatusString("evaluation", validation_data)
             cprint(train_string, logfile)
             cprint(evalString, logfile)
-            cprint("vi.beta: {}".format(vi.beta), logfile)
-            cprint("vi.alpha: {}".format(vi.alpha), logfile)        
+            #cprint("vi.beta: {}".format(vi.beta), logfile)
+            #cprint("vi.alpha: {}".format(vi.alpha), logfile)        
 
             #cprint("training | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(training_epoch_data["elbo"]), np.mean(training_epoch_data["mse_loss"]), np.mean(training_epoch_data["kl"])), logfile)
             #cprint("validation | elbo: {:2f}, mse_loss: {:.4f}, kl: {:.2f}:".format(np.mean(validation_data["elbo"]), np.mean(validation_data["mse_loss"]), np.mean(validation_data["kl"])), logfile)    

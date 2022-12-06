@@ -50,7 +50,7 @@ class CytoVariationalAutoencoder_nonvar(nn.Module):
             ##Output should be 5*5*32 now.
             nn.Conv2d(in_channels=32, out_channels=2*latent_features, kernel_size=5, padding=0),
             # Now we are at: 1h * 1w * 512ch
-            nn.BatchNorm2d(2*latent_features),
+            nn.BatchNorm2d(2*self.latent_features),
             nn.Flatten(),
         )
 
@@ -59,8 +59,8 @@ class CytoVariationalAutoencoder_nonvar(nn.Module):
         # Decode the latent sample `z` into the parameters of the observation model
         # `p_\theta(x | z) = \prod_i B(x_i | g_\theta(x))`
         self.decoder = nn.Sequential(
-            nn.Unflatten(1, (256,1,1)), # Now we are at: 1h * 1w * 256ch
-            nn.Conv2d(in_channels=256, out_channels=32, kernel_size=5, padding=4),
+            nn.Unflatten(1, (self.latent_features,1,1)), # Now we are at: 1h * 1w * 256ch
+            nn.Conv2d(in_channels=self.latent_features, out_channels=32, kernel_size=5, padding=4),
             nn.BatchNorm2d(32),
             nn.LeakyReLU(negative_slope=0.01),
             torch.nn.UpsamplingNearest2d(size=10),

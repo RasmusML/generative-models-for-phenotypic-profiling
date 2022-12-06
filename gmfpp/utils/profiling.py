@@ -13,7 +13,6 @@ def LatentVariableExtraction(metadata, images, batch_size, vae):
     for j, item in enumerate(batch_offset[:-1]):
         start = batch_offset[j]
         end = batch_offset[j+1]
-
         outputs = vae(images[start:end,:,:,:])
         z = outputs["z"]
         columns_list = ["latent_"+str(z) for z in range(z.shape[1])]
@@ -22,6 +21,22 @@ def LatentVariableExtraction(metadata, images, batch_size, vae):
         df = pd.concat([metadata.iloc[start:end], z_df], axis=1)
         new_metadata = pd.concat([new_metadata, df], axis=0)
         print("Profiling {}/{} batches of size {}".format(j, len(batch_offset)-1, batch_size))
+    
+    # last batch
+    start = batch_offset[-1]
+    end = images.shape[0]
+    if start != end:
+        #print(start, end)
+        outputs = vae(images[start:end,:,:,:])
+        z = outputs["z"]
+        #print("z.shape", z.shape)
+        columns_list = ["latent_"+str(z) for z in range(z.shape[1])]
+        z_df = pd.DataFrame(z.detach().numpy(), columns=columns_list)
+        z_df.index = list(range(start,end))
+        df = pd.concat([metadata.iloc[start:end], z_df], axis=1)
+        new_metadata = pd.concat([new_metadata, df], axis=0)
+        print("Profiling {}/{} batches of size {}".format(len(batch_offset)-1, len(batch_offset)-1, end-start))
+
     return new_metadata
 
   # Wells Profiles

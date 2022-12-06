@@ -10,7 +10,7 @@ class SparseVariationalAutoencoder(nn.Module):
     def ReparameterizedSpikeAndSlab_sample(self, mu, log_sigma, log_gamma):
         eps = torch.empty_like(log_sigma.exp()).normal_()
         eta = torch.empty_like(log_sigma.exp()).normal_()
-        selector = torch.sigmoid((log_gamma.exp() + eta -1) * 50)    
+        selector = torch.sigmoid((log_gamma.exp() + eta -1))    
         return selector * (mu + eps.mul(log_sigma.exp()))
 
 
