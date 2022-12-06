@@ -58,7 +58,7 @@ images = load_images(image_paths, verbose=True, log_every=10000, logfile=logfile
 #images = torch.load("images.pt")
 mapping = get_MOA_mappings(metadata)
 cprint("loaded images", logfile)
-normalize_every_image_channels_seperately_inplace(images)
+normalize_channels_inplace(images)
 cprint("normalized images", logfile)
 
 metadata = shuffle_metadata(metadata)
@@ -74,7 +74,7 @@ cprint("VAE Configs", logfile)
 
 # start another training session
 vae, validation_data, training_data, VAE_settings = initVAEmodel(latent_features= 256,
-                                                                    beta = 1,
+                                                                    beta = 1.0,
                                                                     num_epochs = 100,
                                                                     batch_size = min(64, len(train_set)),
                                                                     learning_rate = 1e-3,
