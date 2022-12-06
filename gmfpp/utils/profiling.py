@@ -39,7 +39,7 @@ def well_center_cells(df,well_profiles,p=2):
         diffs_sum = diffs.sum(axis=1)**(1/p)
         diffs_min = diffs_sum.min()
         wcc.append(diffs[diffs_sum == diffs_min].index[0])
-    return wcc
+    return df.loc[wcc]
 
 # Treatment Profiles
 def treatment_profiles(nm):
@@ -57,8 +57,7 @@ def treatment_center_cells(df,treatment_profiles,p=2):
         diffs_sum = diffs.sum(axis=1)**(1/p)
         diffs_min = diffs_sum.min()
         tcc.append(diffs[diffs_sum == diffs_min].index[0])
-    
-    return tcc
+    return df.loc[tcc]
 
 
 # Compount/Concentration Profiles
@@ -68,7 +67,6 @@ def CC_Profile(nm):
     return cc
 
 # function to get the cell closest to each Compound/Concentration profile
-
 def cc_center_cells(df,cc_profiles,p=2):
     cc_center_cells = []
     latent_cols = [col for col in df.columns if type(col)==str and col[0:7]=='latent_']
@@ -77,5 +75,4 @@ def cc_center_cells(df,cc_profiles,p=2):
         diffs_sum = diffs.sum(axis=1)**(1/p)
         diffs_min = diffs_sum.min()
         cc_center_cells.append(diffs[diffs_sum == diffs_min].index[0])
-    
-    return cc_center_cells
+    return df.loc[cc_center_cells]
