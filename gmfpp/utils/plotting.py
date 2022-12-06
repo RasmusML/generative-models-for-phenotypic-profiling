@@ -66,13 +66,13 @@ def plot_image_channels(image: torch.Tensor, clip: bool = True, colorized: bool 
 def plot_VAE_performance(plotdata, file=None, title=None):
     keys = plotdata.keys()
     fig, axs = plt.subplots(1, len(keys), figsize=(14,6), constrained_layout = True)
-    fig.suptitle(title, fontsize=16)
+    fig.suptitle(title, fontsize=26)
     for no, key in enumerate(keys):
         ax = axs[no]
         ax.grid()
         ax.plot(plotdata[key])
-        ax.set_ylabel(key)
-        ax.set_xlabel("epoch")
+        ax.set_ylabel(key, fontsize=26)
+        ax.set_xlabel("epoch", fontsize=26)
         
     if file == None:
         plt.show()
